@@ -1,4 +1,4 @@
-import { loader, Sprite } from 'pixi.js';
+import { loader, Sprite, Circle } from 'pixi.js';
 
 export default class Planet {
   constructor(position, length, assetSource) {
@@ -20,6 +20,7 @@ export default class Planet {
           this.pSpriteObj.position = position;
           this.pSpriteObj.width = this.pSpriteObj.height = length;
           this.pSpriteObj.anchor.set(0.5, 0.5);
+          this.pSpriteObj.hitArea = new Circle(position.x, position.y, length/2);
           stage.addChild(this.pSpriteObj);
           resolve();
         });
