@@ -1,4 +1,4 @@
-import { loader, Sprite } from 'pixi.js';
+import { loader, Sprite, Point } from 'pixi.js';
 
 export default class Planet {
   constructor(position, length, assetSource) {
@@ -6,6 +6,7 @@ export default class Planet {
     this.length = length;
     this.assetSource = assetSource;
     this.pSpriteObj;
+    this.count = 0
   }
 
   load(stage) {
@@ -32,5 +33,16 @@ export default class Planet {
     });
   }
 
-  
+  rotate(ticker, r) {
+    const originalPosition = this.pSpriteObj.position;
+    ticker.add(() => {
+      this.count = this.count + 1 ;
+      this.pSpriteObj.x = (r * Math.cos(this.count/10)) + originalPosition.x;
+      this.pSpriteObj.y = (r * Math.sin(this.count/10)) + originalPosition.y;
+      // this.pSpriteObj.x = (this.count - 500) * (this.count - 500)/ r*r;
+      // this.pSpriteObj.y = (this.count - 500) * (this.count - 500)/ r*r;
+      // console.log(this.count)
+      // console.log(this.pSpriteObj.x);
+    })
+  }
 }

@@ -18,5 +18,6 @@ document.addEventListener("DOMContentLoaded", async function(event)
   sun.spin(app.ticker, 0.01);
   earth.spin(app.ticker, 0.005);
   moon.spin(app.ticker, 0.005);
+  earth.rotate(app.ticker, 100)
 });
 
