@@ -6,14 +6,16 @@ export default class Planet {
     this.length = length;
     this.assetSource = assetSource;
     this.pSpriteObj;
-    this.count = 0
+    this.count = 0;
   }
 
   load(stage) {
     return new Promise((resolve, reject) => {
       try {
         loader.add(this.assetSource).load(() => {
-          this.pSpriteObj = new Sprite(loader.resources[this.assetSource].texture);
+          this.pSpriteObj = new Sprite(
+            loader.resources[this.assetSource].texture
+          );
           this.pSpriteObj.position = this.position;
           this.pSpriteObj.width = this.pSpriteObj.height = this.length;
           this.pSpriteObj.anchor.set(0.5, 0.5);
@@ -24,7 +26,6 @@ export default class Planet {
         reject(e);
       }
     });
-
   }
 
   spin(ticker, radians) {
@@ -33,16 +34,25 @@ export default class Planet {
     });
   }
 
-  rotate(ticker, r) {
-    const originalPosition = this.pSpriteObj.position;
+  position2() {
+    const tr = this.pSpriteObj.transform;
+    return tr.position
+  }
+
+  rotate(ticker, r, speedFactor) {
+    const originalPosition = new Point(this.pSpriteObj.x, this.pSpriteObj.y);
     ticker.add(() => {
-      this.count = this.count + 1 ;
-      this.pSpriteObj.x = (r * Math.cos(this.count/10)) + originalPosition.x;
-      this.pSpriteObj.y = (r * Math.sin(this.count/10)) + originalPosition.y;
-      // this.pSpriteObj.x = (this.count - 500) * (this.count - 500)/ r*r;
-      // this.pSpriteObj.y = (this.count - 500) * (this.count - 500)/ r*r;
-      // console.log(this.count)
-      // console.log(this.pSpriteObj.x);
-    })
+      this.count = this.count + speedFactor;
+      this.pSpriteObj.x = originalPosition.x + r * Math.cos(this.count);
+      this.pSpriteObj.y = originalPosition.y + r * Math.sin(this.count);
+    });
+  }
+
+  dynamicRotate(ticker, r, speedFactor, object) {
+    ticker.add(() => {
+      this.count = this.count + speedFactor;
+      this.pSpriteObj.x = object.position2().x + r * Math.cos(this.count);
+      this.pSpriteObj.y = object.position2().y + r * Math.sin(this.count);
+    });
   }
 }

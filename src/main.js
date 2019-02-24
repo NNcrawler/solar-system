@@ -15,9 +15,10 @@ document.addEventListener("DOMContentLoaded", async function(event)
   await sun.load(app.stage);
   await earth.load(app.stage);
   await moon.load(app.stage);
-  sun.spin(app.ticker, 0.01);
-  earth.spin(app.ticker, 0.005);
+  sun.spin(app.ticker, 0.05);
+  earth.spin(app.ticker, 0.02);
   moon.spin(app.ticker, 0.005);
-  earth.rotate(app.ticker, 100)
+  earth.rotate(app.ticker, 300, 0.006)
+  moon.dynamicRotate(app.ticker, 100, 0.05, earth)
 });
 
