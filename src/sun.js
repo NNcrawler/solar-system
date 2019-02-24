@@ -9,16 +9,27 @@ export default class Sun {
   }
 
   load(stage) {
-    loader.add(sunSvg).load(() => {
-      this.pSpriteObj = new Sprite(loader.resources[sunSvg].texture);
-      this.pSpriteObj.position = this.position;
-      this.pSpriteObj.width = this.pSpriteObj.height = this.length;
-      this.pSpriteObj.anchor.set(0.5, 0.5);
-      stage.addChild(this.pSpriteObj);
+    return new Promise((resolve, reject) => {
+      try {
+        loader.add(sunSvg).load(() => {
+          this.pSpriteObj = new Sprite(loader.resources[sunSvg].texture);
+          this.pSpriteObj.position = this.position;
+          this.pSpriteObj.width = this.pSpriteObj.height = this.length;
+          this.pSpriteObj.anchor.set(0.5, 0.5);
+          stage.addChild(this.pSpriteObj);
+          console.log('finish loading');
+          resolve();
+        });
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
-  rotate(radians) {
-    this.pSpriteObj.rotation = radians;
+  rotate(ticker, radians) {
+    console.log('rotate run');
+    ticker.add(() => {
+      this.pSpriteObj.rotation += radians;
+    });
   }
 }
