@@ -15,8 +15,8 @@ document.addEventListener("DOMContentLoaded", async function(event)
   await sun.load(app.stage);
   await earth.load(app.stage);
   await moon.load(app.stage);
-  sun.rotate(app.ticker, 0.01);
-  earth.rotate(app.ticker, 0.005);
-  moon.rotate(app.ticker, 0.005);
+  sun.spin(app.ticker, 0.01);
+  earth.spin(app.ticker, 0.005);
+  moon.spin(app.ticker, 0.005);
 });
 

@@ -25,9 +25,12 @@ export default class Planet {
     });
 
   }
-  rotate(ticker, radians) {
+
+  spin(ticker, radians) {
     ticker.add(() => {
       this.pSpriteObj.rotation += radians;
     });
   }
+
+  
 }
