@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async function(event) {
     width: window.outerWidth,
     height: window.outerHeight
   });
-  app.renderer.backgroundColor = 0x282c34;
+  app.renderer.backgroundColor = 0x071335;
   document.body.appendChild(app.view);
   const sun = new Sun(window.outerWidth, window.outerHeight);
   const earth = new Earth(window.outerWidth, window.outerHeight);
