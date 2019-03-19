@@ -40,6 +40,10 @@ export default class Planet {
     return this.pSpriteObj.transform.position;
   }
 
+  collideWith(x, y) {
+    return this.pSpriteObj.hitArea.contains(x, y);
+  }
+
   rotate(ticker, r, speedFactor, planetObject) {
     ticker.add(() => {
       this.count = this.count + speedFactor;
