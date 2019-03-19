@@ -25,4 +25,12 @@ export default class Meteor {
       }
     });
   }
+
+  shoot(ticker, movement) {
+    ticker.add(() => {
+      const {x: nextX, y: nextY} = movement.nextPosition(this.pSpriteObj.position);
+      this.pSpriteObj.x = nextX;
+      this.pSpriteObj.y = nextY;
+    })
+  }
 }
