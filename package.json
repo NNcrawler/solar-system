@@ -13,6 +13,8 @@
   "dependencies": {
     "bab": "^0.0.1",
     "babel-polyfill": "^6.26.0",
-    "pixi.js": "^4.8.6"
+    "parcel": "^1.12.2",
+    "pixi.js": "^4.8.6",
+    "victor": "^1.1.0"
   }
 }
