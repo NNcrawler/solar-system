@@ -9,6 +9,10 @@ export default class Meteor {
     };
   }
 
+  setMovement(movement) {
+    this.movement = movement;
+  }
+
   load(stage) {
     return new Promise((resolve, reject) => {
       try {
@@ -17,7 +21,7 @@ export default class Meteor {
           this.pSpriteObj.position = this.options.position;
           this.pSpriteObj.width = this.pSpriteObj.height = this.options.length;
           stage.addChild(this.pSpriteObj);
-          console.log(this.pSpriteObj)
+          console.log(this.pSpriteObj);
           resolve();
         });
       } catch (e) {
@@ -26,11 +30,20 @@ export default class Meteor {
     });
   }
 
-  shoot(ticker, movement) {
-    ticker.add(() => {
-      const {x: nextX, y: nextY} = movement.nextPosition(this.pSpriteObj.position);
-      this.pSpriteObj.x = nextX;
-      this.pSpriteObj.y = nextY;
-    })
+  destroy() {
+    this.pSpriteObj.destroy();
+  }
+
+  collide(collision) {
+    return collision.isCollide(this.pSpriteObj.position);
+  }
+
+  shoot(mvmnt) {
+    const movement = this.movement || mvmnt
+    const { x: nextX, y: nextY } = movement.nextPosition(
+      this.pSpriteObj.position
+    );
+    this.pSpriteObj.x = nextX;
+    this.pSpriteObj.y = nextY;
   }
 }
