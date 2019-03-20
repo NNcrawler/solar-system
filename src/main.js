@@ -9,15 +9,8 @@ import Movement from './ricochetMovement.js';
 import Collision from './collision.js';
 
 async function spawnRandomMeteor(windowWidth, windowHeight, sunCollision, ticker, stage) {
-  const randomPosition = new Vector().randomizeAny(
-    Vector(0, 0),
-    Vector(windowWidth, windowHeight)
-  );
-
-  const meteor = new Meteor(randomPosition.x, randomPosition.y, Math.random() * 50);
-  meteor.setMovement(new Movement(1, windowWidth, windowHeight));
-
-
+  const meteor = Meteor.withRandomPosition(windowWidth, windowHeight);
+  meteor.setMovement(new Movement(6, windowWidth, windowHeight));
   await meteor.load(stage);
 
   const meteorAnimation = () => {

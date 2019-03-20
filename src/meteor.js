@@ -1,7 +1,17 @@
 import { Sprite, loader, Point } from 'pixi.js';
+import Vector from 'victor';
 import starPng from '../assets/star.png';
 
 export default class Meteor {
+  static withRandomPosition(windowWidth, windowHeight) {
+    const {x, y} = new Vector().randomize(
+      Vector(0, 0),
+      Vector(windowWidth, windowHeight)
+    );
+    const diameter = Math.random() * 50;
+    return new Meteor(x, y, diameter);
+  }
+
   constructor(x, y, length) {
     this.options = {
       position: new Point(x, y),
