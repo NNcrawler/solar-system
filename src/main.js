@@ -8,6 +8,29 @@ import Meteor from './meteor.js';
 import Movement from './ricochetMovement.js';
 import Collision from './collision.js';
 
+async function spawnRandomMeteor(windowWidth, windowHeight, sunCollision, ticker, stage) {
+  const randomPosition = new Vector().randomizeAny(
+    Vector(0, 0),
+    Vector(windowWidth, windowHeight)
+  );
+
+  const meteor = new Meteor(randomPosition.x, randomPosition.y, Math.random() * 50);
+  meteor.setMovement(new Movement(1, windowWidth, windowHeight));
+
+
+  await meteor.load(stage);
+
+  const meteorAnimation = () => {
+    meteor.shoot();
+    if (meteor.collide(sunCollision)) {
+      ticker.remove(meteorAnimation);
+      meteor.destroy();
+    }
+  };
+
+  ticker.add(meteorAnimation);
+}
+
 document.addEventListener('DOMContentLoaded', async function(event) {
   const app = new P.Application({
     width: window.outerWidth,

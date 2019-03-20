@@ -15,17 +15,20 @@ export default class Meteor {
 
   load(stage) {
     return new Promise((resolve, reject) => {
+      const loaderCallback = () => {
+        this.pSpriteObj = new Sprite(loader.resources[starPng].texture);
+        this.pSpriteObj.position = this.options.position;
+        this.pSpriteObj.width = this.pSpriteObj.height = this.options.length;
+        stage.addChild(this.pSpriteObj);
+      };
       try {
         loader.add(starPng).load(() => {
-          this.pSpriteObj = new Sprite(loader.resources[starPng].texture);
-          this.pSpriteObj.position = this.options.position;
-          this.pSpriteObj.width = this.pSpriteObj.height = this.options.length;
-          stage.addChild(this.pSpriteObj);
-          console.log(this.pSpriteObj);
+          loaderCallback();
           resolve();
         });
       } catch (e) {
-        reject(e);
+        loaderCallback();
+        resolve();
       }
     });
   }
@@ -39,7 +42,7 @@ export default class Meteor {
   }
 
   shoot(mvmnt) {
-    const movement = this.movement || mvmnt
+    const movement = this.movement || mvmnt;
     const { x: nextX, y: nextY } = movement.nextPosition(
       this.pSpriteObj.position
     );
