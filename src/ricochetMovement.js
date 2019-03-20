@@ -31,7 +31,8 @@ class RicochetMovement {
   vectorAdder(currentPosition) {
     const {x, y} = currentPosition;
     const { speedFactor } = this;
-    const vector = new Vector(speedFactor + 10, speedFactor + 10);
+    const vector = new Vector(Math.random() * 100, Math.random() * 100).normalize();
+    vector.multiply(Vector(speedFactor, speedFactor));
     this.toggleInvertY(y);
     this.toggleInvertX(x);
     this.invertY && vector.invertY();
