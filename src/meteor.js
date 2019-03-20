@@ -37,8 +37,12 @@ export default class Meteor {
           resolve();
         });
       } catch (e) {
-        loaderCallback();
-        resolve();
+        if (e.message.split(' ')[0].toLowerCase() == 'resource') {
+          loaderCallback();
+          resolve();
+        } else {
+          reject(e);
+        }
       }
     });
   }
