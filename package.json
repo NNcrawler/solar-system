@@ -2,10 +2,9 @@
   "name": "solar-system",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
-    "dev": "parcel index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "parcel index.html",
   },
   "keywords": [],
   "author": "",
