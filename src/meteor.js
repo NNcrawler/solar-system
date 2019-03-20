@@ -4,7 +4,7 @@ import starPng from '../assets/star.png';
 
 export default class Meteor {
   static withRandomPosition(windowWidth, windowHeight) {
-    const {x, y} = new Vector().randomize(
+    const { x, y } = new Vector().randomize(
       Vector(0, 0),
       Vector(windowWidth, windowHeight)
     );

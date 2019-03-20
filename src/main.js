@@ -7,8 +7,15 @@ import Meteor from './meteor.js';
 
 import Movement from './ricochetMovement.js';
 import Collision from './collision.js';
+import SpawnMeteorButton from './spawnMeteorButton.js';
 
-async function spawnRandomMeteor(windowWidth, windowHeight, sunCollision, ticker, stage) {
+async function spawnRandomMeteor(
+  windowWidth,
+  windowHeight,
+  sunCollision,
+  ticker,
+  stage
+) {
   const meteor = Meteor.withRandomPosition(windowWidth, windowHeight);
   meteor.setMovement(new Movement(6, windowWidth, windowHeight));
   await meteor.load(stage);
@@ -35,23 +42,36 @@ document.addEventListener('DOMContentLoaded', async function(event) {
   const sun = new Sun(window.outerWidth, window.outerHeight);
   const earth = new Earth(window.outerWidth, window.outerHeight);
   const moon = new Moon(window.outerWidth, window.outerHeight);
+  const spawnMeteorButton = new SpawnMeteorButton({
+    x: 100,
+    y: window.outerHeight / 10
+  });
 
   const sunCollision = new Collision([sun]);
 
   await sun.load(app.stage);
   await earth.load(app.stage);
   await moon.load(app.stage);
+  await spawnMeteorButton.load(app.stage);
 
   sun.spin(app.ticker, 0.05);
   earth.spin(app.ticker, 0.02);
   moon.spin(app.ticker, 0.005);
+  const buttonShake = spawnMeteorButton.shake(3, 3);
 
-  for (let index = 0; index < 100; index++) {
-    await spawnRandomMeteor(window.outerWidth, window.outerHeight, sunCollision, app.ticker, app.stage)
-    
-  }
+  app.ticker.add(buttonShake);
 
-  
+  spawnMeteorButton.onClick(
+    async () =>
+      await spawnRandomMeteor(
+        window.outerWidth,
+        window.outerHeight,
+        sunCollision,
+        app.ticker,
+        app.stage
+      )
+  );
+
   earth.rotate(app.ticker, 300, 0.006, sun);
   moon.rotate(app.ticker, 100, 0.05, earth);
 });
