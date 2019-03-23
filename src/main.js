@@ -33,18 +33,20 @@ async function spawnRandomMeteor(
 
 document.addEventListener('DOMContentLoaded', async function(event) {
   const app = new P.Application({
-    width: window.outerWidth,
-    height: window.outerHeight
+    width: window.outerWidth - 20,
+    height: window.outerHeight - 135
   });
   app.renderer.backgroundColor = 0x071335;
   document.body.appendChild(app.view);
 
-  const sun = new Sun(window.outerWidth, window.outerHeight);
-  const earth = new Earth(window.outerWidth, window.outerHeight);
-  const moon = new Moon(window.outerWidth, window.outerHeight);
+  const {width: appWidth, height: appHeight} = app.screen;
+
+  const sun = new Sun(appWidth, appHeight);
+  const earth = new Earth(appWidth, appHeight);
+  const moon = new Moon(appWidth, appHeight);
   const spawnMeteorButton = new SpawnMeteorButton({
     x: 100,
-    y: window.outerHeight / 10
+    y: appHeight / 10
   });
 
   const sunCollision = new Collision([sun]);
@@ -64,8 +66,8 @@ document.addEventListener('DOMContentLoaded', async function(event) {
   spawnMeteorButton.onClick(
     async () =>
       await spawnRandomMeteor(
-        window.outerWidth,
-        window.outerHeight,
+        appWidth,
+        appHeight,
         sunCollision,
         app.ticker,
         app.stage
