@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.html",
   "scripts": {
-    "dev": "parcel index.html"
+    "dev": "parcel index.html",
+    "deploy": "parcel build index.html; rm -rf docs/*; cp dist/* docs/"
   },
   "keywords": [],
   "author": "",
