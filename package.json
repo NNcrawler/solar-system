@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "parcel index.html",
-    "deploy": "parcel build index.html; rm -rf docs/*; cp dist/* docs/"
+    "deploy": "parcel build --public-url './solar-system/' index.html; rm -rf docs/*; cp dist/* docs/"
   },
   "keywords": [],
   "author": "",

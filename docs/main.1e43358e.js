@@ -127,7 +127,7 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 
 },{}],"node_modules/core-js/modules/_core.js":[function(require,module,exports) {
-var core = module.exports = { version: '2.6.9' };
+var core = module.exports = { version: '2.6.11' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 },{}],"node_modules/core-js/modules/_is-object.js":[function(require,module,exports) {
@@ -613,7 +613,72 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_export":"node_modules/core-js/modules/_export.js","./_array-methods":"node_modules/core-js/modules/_array-methods.js","./_add-to-unscopables":"node_modules/core-js/modules/_add-to-unscopables.js"}],"node_modules/core-js/modules/_iter-call.js":[function(require,module,exports) {
+},{"./_export":"node_modules/core-js/modules/_export.js","./_array-methods":"node_modules/core-js/modules/_array-methods.js","./_add-to-unscopables":"node_modules/core-js/modules/_add-to-unscopables.js"}],"node_modules/core-js/modules/_flatten-into-array.js":[function(require,module,exports) {
+'use strict';
+// https://tc39.github.io/proposal-flatMap/#sec-FlattenIntoArray
+var isArray = require('./_is-array');
+var isObject = require('./_is-object');
+var toLength = require('./_to-length');
+var ctx = require('./_ctx');
+var IS_CONCAT_SPREADABLE = require('./_wks')('isConcatSpreadable');
+
+function flattenIntoArray(target, original, source, sourceLen, start, depth, mapper, thisArg) {
+  var targetIndex = start;
+  var sourceIndex = 0;
+  var mapFn = mapper ? ctx(mapper, thisArg, 3) : false;
+  var element, spreadable;
+
+  while (sourceIndex < sourceLen) {
+    if (sourceIndex in source) {
+      element = mapFn ? mapFn(source[sourceIndex], sourceIndex, original) : source[sourceIndex];
+
+      spreadable = false;
+      if (isObject(element)) {
+        spreadable = element[IS_CONCAT_SPREADABLE];
+        spreadable = spreadable !== undefined ? !!spreadable : isArray(element);
+      }
+
+      if (spreadable && depth > 0) {
+        targetIndex = flattenIntoArray(target, original, element, toLength(element.length), targetIndex, depth - 1) - 1;
+      } else {
+        if (targetIndex >= 0x1fffffffffffff) throw TypeError();
+        target[targetIndex] = element;
+      }
+
+      targetIndex++;
+    }
+    sourceIndex++;
+  }
+  return targetIndex;
+}
+
+module.exports = flattenIntoArray;
+
+},{"./_is-array":"node_modules/core-js/modules/_is-array.js","./_is-object":"node_modules/core-js/modules/_is-object.js","./_to-length":"node_modules/core-js/modules/_to-length.js","./_ctx":"node_modules/core-js/modules/_ctx.js","./_wks":"node_modules/core-js/modules/_wks.js"}],"node_modules/core-js/modules/es7.array.flat-map.js":[function(require,module,exports) {
+'use strict';
+// https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatMap
+var $export = require('./_export');
+var flattenIntoArray = require('./_flatten-into-array');
+var toObject = require('./_to-object');
+var toLength = require('./_to-length');
+var aFunction = require('./_a-function');
+var arraySpeciesCreate = require('./_array-species-create');
+
+$export($export.P, 'Array', {
+  flatMap: function flatMap(callbackfn /* , thisArg */) {
+    var O = toObject(this);
+    var sourceLen, A;
+    aFunction(callbackfn);
+    sourceLen = toLength(O.length);
+    A = arraySpeciesCreate(O, 0);
+    flattenIntoArray(A, O, O, sourceLen, 0, 1, callbackfn, arguments[1]);
+    return A;
+  }
+});
+
+require('./_add-to-unscopables')('flatMap');
+
+},{"./_export":"node_modules/core-js/modules/_export.js","./_flatten-into-array":"node_modules/core-js/modules/_flatten-into-array.js","./_to-object":"node_modules/core-js/modules/_to-object.js","./_to-length":"node_modules/core-js/modules/_to-length.js","./_a-function":"node_modules/core-js/modules/_a-function.js","./_array-species-create":"node_modules/core-js/modules/_array-species-create.js","./_add-to-unscopables":"node_modules/core-js/modules/_add-to-unscopables.js"}],"node_modules/core-js/modules/_iter-call.js":[function(require,module,exports) {
 // call something on iterator step with safe closing on error
 var anObject = require('./_an-object');
 module.exports = function (iterator, fn, value, entries) {
@@ -1125,25 +1190,7 @@ module.exports = function (KEY) {
 },{"./_global":"node_modules/core-js/modules/_global.js","./_object-dp":"node_modules/core-js/modules/_object-dp.js","./_descriptors":"node_modules/core-js/modules/_descriptors.js","./_wks":"node_modules/core-js/modules/_wks.js"}],"node_modules/core-js/modules/es6.array.species.js":[function(require,module,exports) {
 require('./_set-species')('Array');
 
-},{"./_set-species":"node_modules/core-js/modules/_set-species.js"}],"node_modules/core-js/modules/es6.date.to-json.js":[function(require,module,exports) {
-'use strict';
-var $export = require('./_export');
-var toObject = require('./_to-object');
-var toPrimitive = require('./_to-primitive');
-
-$export($export.P + $export.F * require('./_fails')(function () {
-  return new Date(NaN).toJSON() !== null
-    || Date.prototype.toJSON.call({ toISOString: function () { return 1; } }) !== 1;
-}), 'Date', {
-  // eslint-disable-next-line no-unused-vars
-  toJSON: function toJSON(key) {
-    var O = toObject(this);
-    var pv = toPrimitive(O);
-    return typeof pv == 'number' && !isFinite(pv) ? null : O.toISOString();
-  }
-});
-
-},{"./_export":"node_modules/core-js/modules/_export.js","./_to-object":"node_modules/core-js/modules/_to-object.js","./_to-primitive":"node_modules/core-js/modules/_to-primitive.js","./_fails":"node_modules/core-js/modules/_fails.js"}],"node_modules/core-js/modules/_date-to-primitive.js":[function(require,module,exports) {
+},{"./_set-species":"node_modules/core-js/modules/_set-species.js"}],"node_modules/core-js/modules/_date-to-primitive.js":[function(require,module,exports) {
 'use strict';
 var anObject = require('./_an-object');
 var toPrimitive = require('./_to-primitive');
@@ -1160,7 +1207,21 @@ var proto = Date.prototype;
 
 if (!(TO_PRIMITIVE in proto)) require('./_hide')(proto, TO_PRIMITIVE, require('./_date-to-primitive'));
 
-},{"./_wks":"node_modules/core-js/modules/_wks.js","./_hide":"node_modules/core-js/modules/_hide.js","./_date-to-primitive":"node_modules/core-js/modules/_date-to-primitive.js"}],"node_modules/core-js/modules/es6.function.has-instance.js":[function(require,module,exports) {
+},{"./_wks":"node_modules/core-js/modules/_wks.js","./_hide":"node_modules/core-js/modules/_hide.js","./_date-to-primitive":"node_modules/core-js/modules/_date-to-primitive.js"}],"node_modules/core-js/modules/es6.date.to-string.js":[function(require,module,exports) {
+var DateProto = Date.prototype;
+var INVALID_DATE = 'Invalid Date';
+var TO_STRING = 'toString';
+var $toString = DateProto[TO_STRING];
+var getTime = DateProto.getTime;
+if (new Date(NaN) + '' != INVALID_DATE) {
+  require('./_redefine')(DateProto, TO_STRING, function toString() {
+    var value = getTime.call(this);
+    // eslint-disable-next-line no-self-compare
+    return value === value ? $toString.call(this) : INVALID_DATE;
+  });
+}
+
+},{"./_redefine":"node_modules/core-js/modules/_redefine.js"}],"node_modules/core-js/modules/es6.function.has-instance.js":[function(require,module,exports) {
 'use strict';
 var isObject = require('./_is-object');
 var getPrototypeOf = require('./_object-gpo');
@@ -2365,7 +2426,19 @@ require('./_object-sap')('preventExtensions', function ($preventExtensions) {
   };
 });
 
-},{"./_is-object":"node_modules/core-js/modules/_is-object.js","./_meta":"node_modules/core-js/modules/_meta.js","./_object-sap":"node_modules/core-js/modules/_object-sap.js"}],"node_modules/core-js/modules/_same-value.js":[function(require,module,exports) {
+},{"./_is-object":"node_modules/core-js/modules/_is-object.js","./_meta":"node_modules/core-js/modules/_meta.js","./_object-sap":"node_modules/core-js/modules/_object-sap.js"}],"node_modules/core-js/modules/es6.object.to-string.js":[function(require,module,exports) {
+'use strict';
+// 19.1.3.6 Object.prototype.toString()
+var classof = require('./_classof');
+var test = {};
+test[require('./_wks')('toStringTag')] = 'z';
+if (test + '' != '[object z]') {
+  require('./_redefine')(Object.prototype, 'toString', function toString() {
+    return '[object ' + classof(this) + ']';
+  }, true);
+}
+
+},{"./_classof":"node_modules/core-js/modules/_classof.js","./_wks":"node_modules/core-js/modules/_wks.js","./_redefine":"node_modules/core-js/modules/_redefine.js"}],"node_modules/core-js/modules/_same-value.js":[function(require,module,exports) {
 // 7.2.9 SameValue(x, y)
 module.exports = Object.is || function is(x, y) {
   // eslint-disable-next-line no-self-compare
@@ -4600,7 +4673,25 @@ require('./_string-html')('sup', function (createHTML) {
   };
 });
 
-},{"./_string-html":"node_modules/core-js/modules/_string-html.js"}],"node_modules/core-js/modules/_typed.js":[function(require,module,exports) {
+},{"./_string-html":"node_modules/core-js/modules/_string-html.js"}],"node_modules/core-js/modules/es7.string.trim-left.js":[function(require,module,exports) {
+'use strict';
+// https://github.com/sebmarkbage/ecmascript-string-left-right-trim
+require('./_string-trim')('trimLeft', function ($trim) {
+  return function trimLeft() {
+    return $trim(this, 1);
+  };
+}, 'trimStart');
+
+},{"./_string-trim":"node_modules/core-js/modules/_string-trim.js"}],"node_modules/core-js/modules/es7.string.trim-right.js":[function(require,module,exports) {
+'use strict';
+// https://github.com/sebmarkbage/ecmascript-string-left-right-trim
+require('./_string-trim')('trimRight', function ($trim) {
+  return function trimRight() {
+    return $trim(this, 2);
+  };
+}, 'trimEnd');
+
+},{"./_string-trim":"node_modules/core-js/modules/_string-trim.js"}],"node_modules/core-js/modules/_typed.js":[function(require,module,exports) {
 
 var global = require('./_global');
 var hide = require('./_hide');
@@ -4970,7 +5061,13 @@ $export($export.P + $export.U + $export.F * require('./_fails')(function () {
 
 require('./_set-species')(ARRAY_BUFFER);
 
-},{"./_export":"node_modules/core-js/modules/_export.js","./_typed":"node_modules/core-js/modules/_typed.js","./_typed-buffer":"node_modules/core-js/modules/_typed-buffer.js","./_an-object":"node_modules/core-js/modules/_an-object.js","./_to-absolute-index":"node_modules/core-js/modules/_to-absolute-index.js","./_to-length":"node_modules/core-js/modules/_to-length.js","./_is-object":"node_modules/core-js/modules/_is-object.js","./_global":"node_modules/core-js/modules/_global.js","./_species-constructor":"node_modules/core-js/modules/_species-constructor.js","./_fails":"node_modules/core-js/modules/_fails.js","./_set-species":"node_modules/core-js/modules/_set-species.js"}],"node_modules/core-js/modules/_typed-array.js":[function(require,module,exports) {
+},{"./_export":"node_modules/core-js/modules/_export.js","./_typed":"node_modules/core-js/modules/_typed.js","./_typed-buffer":"node_modules/core-js/modules/_typed-buffer.js","./_an-object":"node_modules/core-js/modules/_an-object.js","./_to-absolute-index":"node_modules/core-js/modules/_to-absolute-index.js","./_to-length":"node_modules/core-js/modules/_to-length.js","./_is-object":"node_modules/core-js/modules/_is-object.js","./_global":"node_modules/core-js/modules/_global.js","./_species-constructor":"node_modules/core-js/modules/_species-constructor.js","./_fails":"node_modules/core-js/modules/_fails.js","./_set-species":"node_modules/core-js/modules/_set-species.js"}],"node_modules/core-js/modules/es6.typed.data-view.js":[function(require,module,exports) {
+var $export = require('./_export');
+$export($export.G + $export.W + $export.F * !require('./_typed').ABV, {
+  DataView: require('./_typed-buffer').DataView
+});
+
+},{"./_export":"node_modules/core-js/modules/_export.js","./_typed":"node_modules/core-js/modules/_typed.js","./_typed-buffer":"node_modules/core-js/modules/_typed-buffer.js"}],"node_modules/core-js/modules/_typed-array.js":[function(require,module,exports) {
 var global = arguments[3];
 'use strict';
 if (require('./_descriptors')) {
@@ -5682,72 +5779,7 @@ require('./_collection')(WEAK_SET, function (get) {
   }
 }, weak, false, true);
 
-},{"./_collection-weak":"node_modules/core-js/modules/_collection-weak.js","./_validate-collection":"node_modules/core-js/modules/_validate-collection.js","./_collection":"node_modules/core-js/modules/_collection.js"}],"node_modules/core-js/modules/_flatten-into-array.js":[function(require,module,exports) {
-'use strict';
-// https://tc39.github.io/proposal-flatMap/#sec-FlattenIntoArray
-var isArray = require('./_is-array');
-var isObject = require('./_is-object');
-var toLength = require('./_to-length');
-var ctx = require('./_ctx');
-var IS_CONCAT_SPREADABLE = require('./_wks')('isConcatSpreadable');
-
-function flattenIntoArray(target, original, source, sourceLen, start, depth, mapper, thisArg) {
-  var targetIndex = start;
-  var sourceIndex = 0;
-  var mapFn = mapper ? ctx(mapper, thisArg, 3) : false;
-  var element, spreadable;
-
-  while (sourceIndex < sourceLen) {
-    if (sourceIndex in source) {
-      element = mapFn ? mapFn(source[sourceIndex], sourceIndex, original) : source[sourceIndex];
-
-      spreadable = false;
-      if (isObject(element)) {
-        spreadable = element[IS_CONCAT_SPREADABLE];
-        spreadable = spreadable !== undefined ? !!spreadable : isArray(element);
-      }
-
-      if (spreadable && depth > 0) {
-        targetIndex = flattenIntoArray(target, original, element, toLength(element.length), targetIndex, depth - 1) - 1;
-      } else {
-        if (targetIndex >= 0x1fffffffffffff) throw TypeError();
-        target[targetIndex] = element;
-      }
-
-      targetIndex++;
-    }
-    sourceIndex++;
-  }
-  return targetIndex;
-}
-
-module.exports = flattenIntoArray;
-
-},{"./_is-array":"node_modules/core-js/modules/_is-array.js","./_is-object":"node_modules/core-js/modules/_is-object.js","./_to-length":"node_modules/core-js/modules/_to-length.js","./_ctx":"node_modules/core-js/modules/_ctx.js","./_wks":"node_modules/core-js/modules/_wks.js"}],"node_modules/core-js/modules/es7.array.flat-map.js":[function(require,module,exports) {
-'use strict';
-// https://tc39.github.io/proposal-flatMap/#sec-Array.prototype.flatMap
-var $export = require('./_export');
-var flattenIntoArray = require('./_flatten-into-array');
-var toObject = require('./_to-object');
-var toLength = require('./_to-length');
-var aFunction = require('./_a-function');
-var arraySpeciesCreate = require('./_array-species-create');
-
-$export($export.P, 'Array', {
-  flatMap: function flatMap(callbackfn /* , thisArg */) {
-    var O = toObject(this);
-    var sourceLen, A;
-    aFunction(callbackfn);
-    sourceLen = toLength(O.length);
-    A = arraySpeciesCreate(O, 0);
-    flattenIntoArray(A, O, O, sourceLen, 0, 1, callbackfn, arguments[1]);
-    return A;
-  }
-});
-
-require('./_add-to-unscopables')('flatMap');
-
-},{"./_export":"node_modules/core-js/modules/_export.js","./_flatten-into-array":"node_modules/core-js/modules/_flatten-into-array.js","./_to-object":"node_modules/core-js/modules/_to-object.js","./_to-length":"node_modules/core-js/modules/_to-length.js","./_a-function":"node_modules/core-js/modules/_a-function.js","./_array-species-create":"node_modules/core-js/modules/_array-species-create.js","./_add-to-unscopables":"node_modules/core-js/modules/_add-to-unscopables.js"}],"node_modules/core-js/modules/web.timers.js":[function(require,module,exports) {
+},{"./_collection-weak":"node_modules/core-js/modules/_collection-weak.js","./_validate-collection":"node_modules/core-js/modules/_validate-collection.js","./_collection":"node_modules/core-js/modules/_collection.js"}],"node_modules/core-js/modules/web.timers.js":[function(require,module,exports) {
 
 // ie9- setTimeout & setInterval additional parameters fix
 var global = require('./_global');
@@ -6835,7 +6867,7 @@ exports.__esModule = true;
  * @name VERSION
  * @type {string}
  */
-var VERSION = exports.VERSION = '4.8.8';
+var VERSION = exports.VERSION = '4.8.9';
 
 /**
  * Two Pi.
@@ -13053,7 +13085,7 @@ function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
 
             // if this didn't work, try curing all small self-intersections locally
             } else if (pass === 1) {
-                ear = cureLocalIntersections(ear, triangles, dim);
+                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
                 earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
 
             // as a last resort, try splitting the remaining polygon into two
@@ -13160,7 +13192,7 @@ function cureLocalIntersections(start, triangles, dim) {
         p = p.next;
     } while (p !== start);
 
-    return p;
+    return filterPoints(p);
 }
 
 // try splitting polygon into two and triangulate them independently
@@ -13222,6 +13254,9 @@ function eliminateHole(hole, outerNode) {
     outerNode = findHoleBridge(hole, outerNode);
     if (outerNode) {
         var b = splitPolygon(outerNode, hole);
+
+        // filter collinear points around the cuts
+        filterPoints(outerNode, outerNode.next);
         filterPoints(b, b.next);
     }
 }
@@ -13253,7 +13288,7 @@ function findHoleBridge(hole, outerNode) {
 
     if (!m) return null;
 
-    if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+    if (hx === qx) return m; // hole touches outer segment; pick leftmost endpoint
 
     // look for points inside the triangle of hole point, segment intersection and endpoint;
     // if there are no points found, we have a valid connection;
@@ -13265,24 +13300,30 @@ function findHoleBridge(hole, outerNode) {
         tanMin = Infinity,
         tan;
 
-    p = m.next;
+    p = m;
 
-    while (p !== stop) {
+    do {
         if (hx >= p.x && p.x >= mx && hx !== p.x &&
                 pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
 
             tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
 
-            if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+            if (locallyInside(p, hole) &&
+                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
                 m = p;
                 tanMin = tan;
             }
         }
 
         p = p.next;
-    }
+    } while (p !== stop);
 
     return m;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
 }
 
 // interlink polygon nodes in z-order
@@ -13394,8 +13435,10 @@ function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
 
 // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
 function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-           locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
 }
 
 // signed area of a triangle
@@ -13410,10 +13453,28 @@ function equals(p1, p2) {
 
 // check if two segments intersect
 function intersects(p1, q1, p2, q2) {
-    if ((equals(p1, q1) && equals(p2, q2)) ||
-        (equals(p1, q2) && equals(p2, q1))) return true;
-    return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-           area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+    var o1 = sign(area(p1, q1, p2));
+    var o2 = sign(area(p1, q1, q2));
+    var o3 = sign(area(p2, q2, p1));
+    var o4 = sign(area(p2, q2, q1));
+
+    if (o1 !== o2 && o3 !== o4) return true; // general case
+
+    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+    return false;
+}
+
+// for collinear points p, q, r, check if point q lies on segment pr
+function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+}
+
+function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
 }
 
 // check if a polygon diagonal intersects any polygon segments
@@ -14470,7 +14531,7 @@ var Container = function (_DisplayObject) {
         }
 
         // do a quick check to see if this element has a mask or a filter.
-        if (this._mask || this._filters) {
+        if (this._mask || this.filters && this.filters.length) {
             this.renderAdvancedWebGL(renderer);
         } else {
             this._renderWebGL(renderer);
@@ -22293,6 +22354,9 @@ process.umask = function () {
 };
 },{}],"node_modules/path-browserify/index.js":[function(require,module,exports) {
 var process = require("process");
+// .dirname, .basename, and .extname methods are extracted from Node.js v8.11.1,
+// backported and transplited with Babel, with backwards-compat fixes
+
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22343,14 +22407,6 @@ function normalizeArray(parts, allowAboveRoot) {
 
   return parts;
 }
-
-// Split a filename into [root, dir, basename, ext], unix version
-// 'root' is just a slash, or nothing.
-var splitPathRe =
-    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
-var splitPath = function(filename) {
-  return splitPathRe.exec(filename).slice(1);
-};
 
 // path.resolve([from ...], to)
 // posix version
@@ -22467,37 +22523,120 @@ exports.relative = function(from, to) {
 exports.sep = '/';
 exports.delimiter = ':';
 
-exports.dirname = function(path) {
-  var result = splitPath(path),
-      root = result[0],
-      dir = result[1];
-
-  if (!root && !dir) {
-    // No dirname whatsoever
-    return '.';
+exports.dirname = function (path) {
+  if (typeof path !== 'string') path = path + '';
+  if (path.length === 0) return '.';
+  var code = path.charCodeAt(0);
+  var hasRoot = code === 47 /*/*/;
+  var end = -1;
+  var matchedSlash = true;
+  for (var i = path.length - 1; i >= 1; --i) {
+    code = path.charCodeAt(i);
+    if (code === 47 /*/*/) {
+        if (!matchedSlash) {
+          end = i;
+          break;
+        }
+      } else {
+      // We saw the first non-path separator
+      matchedSlash = false;
+    }
   }
 
-  if (dir) {
-    // It has a dirname, strip trailing slash
-    dir = dir.substr(0, dir.length - 1);
+  if (end === -1) return hasRoot ? '/' : '.';
+  if (hasRoot && end === 1) {
+    // return '//';
+    // Backwards-compat fix:
+    return '/';
   }
-
-  return root + dir;
+  return path.slice(0, end);
 };
 
+function basename(path) {
+  if (typeof path !== 'string') path = path + '';
 
-exports.basename = function(path, ext) {
-  var f = splitPath(path)[2];
-  // TODO: make this comparison case-insensitive on windows?
+  var start = 0;
+  var end = -1;
+  var matchedSlash = true;
+  var i;
+
+  for (i = path.length - 1; i >= 0; --i) {
+    if (path.charCodeAt(i) === 47 /*/*/) {
+        // If we reached a path separator that was not part of a set of path
+        // separators at the end of the string, stop now
+        if (!matchedSlash) {
+          start = i + 1;
+          break;
+        }
+      } else if (end === -1) {
+      // We saw the first non-path separator, mark this as the end of our
+      // path component
+      matchedSlash = false;
+      end = i + 1;
+    }
+  }
+
+  if (end === -1) return '';
+  return path.slice(start, end);
+}
+
+// Uses a mixed approach for backwards-compatibility, as ext behavior changed
+// in new Node.js versions, so only basename() above is backported here
+exports.basename = function (path, ext) {
+  var f = basename(path);
   if (ext && f.substr(-1 * ext.length) === ext) {
     f = f.substr(0, f.length - ext.length);
   }
   return f;
 };
 
+exports.extname = function (path) {
+  if (typeof path !== 'string') path = path + '';
+  var startDot = -1;
+  var startPart = 0;
+  var end = -1;
+  var matchedSlash = true;
+  // Track the state of characters (if any) we see before our first dot and
+  // after any path separator we find
+  var preDotState = 0;
+  for (var i = path.length - 1; i >= 0; --i) {
+    var code = path.charCodeAt(i);
+    if (code === 47 /*/*/) {
+        // If we reached a path separator that was not part of a set of path
+        // separators at the end of the string, stop now
+        if (!matchedSlash) {
+          startPart = i + 1;
+          break;
+        }
+        continue;
+      }
+    if (end === -1) {
+      // We saw the first non-path separator, mark this as the end of our
+      // extension
+      matchedSlash = false;
+      end = i + 1;
+    }
+    if (code === 46 /*.*/) {
+        // If this is our first dot, mark it as the start of our extension
+        if (startDot === -1)
+          startDot = i;
+        else if (preDotState !== 1)
+          preDotState = 1;
+    } else if (startDot !== -1) {
+      // We saw a non-dot and non-path separator before our dot, so we should
+      // have a good chance at having a non-empty extension
+      preDotState = -1;
+    }
+  }
 
-exports.extname = function(path) {
-  return splitPath(path)[3];
+  if (startDot === -1 || end === -1 ||
+      // We saw a non-dot character immediately before the dot
+      preDotState === 0 ||
+      // The (right-most) trimmed path component is exactly '..'
+      preDotState === 1 && startDot === end - 1 && startDot === startPart + 1) {
+    return '';
+  }
+  return path.slice(startDot, end);
 };
 
 function filter (xs, f) {
@@ -28727,6 +28866,8 @@ var Text = function (_Sprite) {
         var currentPosition = x;
         var index = 0;
         var current = '';
+        var previousWidth = this.context.measureText(text).width;
+        var currentWidth = 0;
 
         while (index < text.length) {
             current = characters[index++];
@@ -28735,7 +28876,9 @@ var Text = function (_Sprite) {
             } else {
                 this.context.fillText(current, currentPosition, y);
             }
-            currentPosition += this.context.measureText(current).width + letterSpacing;
+            currentWidth = this.context.measureText(text.substring(index)).width;
+            currentPosition += previousWidth - currentWidth + letterSpacing;
+            previousWidth = currentWidth;
         }
     };
 
@@ -30348,17 +30491,22 @@ var Graphics = function (_Container) {
             // only deal with fills..
             if (data.shape) {
                 if (data.shape.contains(tempPoint.x, tempPoint.y)) {
+                    var hitHole = false;
+
                     if (data.holes) {
                         for (var _i = 0; _i < data.holes.length; _i++) {
                             var hole = data.holes[_i];
 
                             if (hole.contains(tempPoint.x, tempPoint.y)) {
-                                return false;
+                                hitHole = true;
+                                break;
                             }
                         }
                     }
 
-                    return true;
+                    if (!hitHole) {
+                        return true;
+                    }
                 }
             }
         }
@@ -35020,8 +35168,8 @@ var WebGLExtract = function () {
             frame.height = textureBuffer.size.height;
         }
 
-        var width = frame.width * resolution;
-        var height = frame.height * resolution;
+        var width = Math.floor(frame.width * resolution + 1e-4);
+        var height = Math.floor(frame.height * resolution + 1e-4);
 
         var canvasBuffer = new core.CanvasRenderTarget(width, height, 1);
 
@@ -35248,8 +35396,8 @@ var CanvasExtract = function () {
             frame.height = this.renderer.height;
         }
 
-        var width = frame.width * resolution;
-        var height = frame.height * resolution;
+        var width = Math.floor(frame.width * resolution + 1e-4);
+        var height = Math.floor(frame.height * resolution + 1e-4);
 
         var canvasBuffer = new core.CanvasRenderTarget(width, height, 1);
         var canvasData = context.getImageData(frame.x * resolution, frame.y * resolution, width, height);
@@ -48681,9 +48829,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var Planet =
-/*#__PURE__*/
-function () {
+var Planet = /*#__PURE__*/function () {
   function Planet(position, length, assetSource) {
     _classCallCheck(this, Planet);
 
@@ -48697,40 +48843,26 @@ function () {
   }
 
   _createClass(Planet, [{
-    key: "load",
-    value: function load(stage) {
-      var _this = this;
-
-      return new Promise(function (resolve, reject) {
-        var _this$spriteOptions = _this.spriteOptions,
-            position = _this$spriteOptions.position,
-            length = _this$spriteOptions.length,
-            assetSource = _this$spriteOptions.assetSource;
-
-        try {
-          _pixi.loader.add(assetSource).load(function () {
-            _this.pSpriteObj = new _pixi.Sprite(_pixi.loader.resources[assetSource].texture);
-            _this.pSpriteObj.position = position;
-            _this.pSpriteObj.width = _this.pSpriteObj.height = length;
-
-            _this.pSpriteObj.anchor.set(0.5, 0.5);
-
-            _this.pSpriteObj.hitArea = new _pixi.Circle(position.x, position.y, length / 2);
-            stage.addChild(_this.pSpriteObj);
-            resolve();
-          });
-        } catch (e) {
-          reject(e);
-        }
-      });
+    key: "setup",
+    value: function setup(stage) {
+      var _this$spriteOptions = this.spriteOptions,
+          position = _this$spriteOptions.position,
+          length = _this$spriteOptions.length,
+          assetSource = _this$spriteOptions.assetSource;
+      this.pSpriteObj = new _pixi.Sprite(_pixi.loader.resources[assetSource].texture);
+      this.pSpriteObj.position = position;
+      this.pSpriteObj.width = this.pSpriteObj.height = length;
+      this.pSpriteObj.anchor.set(0.5, 0.5);
+      this.pSpriteObj.hitArea = new _pixi.Circle(position.x, position.y, length / 2);
+      stage.addChild(this.pSpriteObj);
     }
   }, {
     key: "spin",
     value: function spin(ticker, radians) {
-      var _this2 = this;
+      var _this = this;
 
       ticker.add(function () {
-        _this2.pSpriteObj.rotation += radians;
+        _this.pSpriteObj.rotation += radians;
       });
     }
   }, {
@@ -48746,12 +48878,12 @@ function () {
   }, {
     key: "rotate",
     value: function rotate(ticker, r, speedFactor, planetObject) {
-      var _this3 = this;
+      var _this2 = this;
 
       ticker.add(function () {
-        _this3.count = _this3.count + speedFactor;
-        _this3.pSpriteObj.x = planetObject.position().x + r * Math.cos(_this3.count);
-        _this3.pSpriteObj.y = planetObject.position().y + r * Math.sin(_this3.count);
+        _this2.count = _this2.count + speedFactor;
+        _this2.pSpriteObj.x = planetObject.position().x + r * Math.cos(_this2.count);
+        _this2.pSpriteObj.y = planetObject.position().y + r * Math.sin(_this2.count);
       });
     }
   }]);
@@ -48760,9 +48892,7 @@ function () {
 }();
 
 exports.default = Planet;
-},{"pixi.js":"node_modules/pixi.js/lib/index.js"}],"assets/sun.svg":[function(require,module,exports) {
-module.exports = "/sun.792d5ba3.svg";
-},{}],"src/sun.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/index.js"}],"src/sun.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48774,25 +48904,21 @@ var _pixi = require("pixi.js");
 
 var _planet = _interopRequireDefault(require("./planet"));
 
-var _sun = _interopRequireDefault(require("../assets/sun.svg"));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Sun = function Sun(screenWidth, screenHeight) {
+var Sun = function Sun(screenWidth, screenHeight, texture) {
   _classCallCheck(this, Sun);
 
   var position = new _pixi.Point(screenWidth / 2, screenHeight / 2);
   var length = 100;
-  var planet = new _planet.default(position, length, _sun.default);
+  var planet = new _planet.default(position, length, texture);
   return planet;
 };
 
 exports.default = Sun;
-},{"pixi.js":"node_modules/pixi.js/lib/index.js","./planet":"src/planet.js","../assets/sun.svg":"assets/sun.svg"}],"assets/earth.svg":[function(require,module,exports) {
-module.exports = "/earth.9719f985.svg";
-},{}],"src/earth.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/index.js","./planet":"src/planet.js"}],"src/earth.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48802,26 +48928,22 @@ exports.default = void 0;
 
 var _pixi = require("pixi.js");
 
-var _earth = _interopRequireDefault(require("../assets/earth.svg"));
-
 var _planet = _interopRequireDefault(require("./planet"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Earth = function Earth(screenWidth, screenHeight) {
+var Earth = function Earth(screenWidth, screenHeight, texture) {
   _classCallCheck(this, Earth);
 
   var position = new _pixi.Point(screenWidth / 2, screenHeight / 2);
   var length = 50;
-  return new _planet.default(position, length, _earth.default);
+  return new _planet.default(position, length, texture);
 };
 
 exports.default = Earth;
-},{"pixi.js":"node_modules/pixi.js/lib/index.js","../assets/earth.svg":"assets/earth.svg","./planet":"src/planet.js"}],"assets/moon.svg":[function(require,module,exports) {
-module.exports = "/moon.bd014af3.svg";
-},{}],"src/moon.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/index.js","./planet":"src/planet.js"}],"src/moon.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -48831,24 +48953,22 @@ exports.default = void 0;
 
 var _pixi = require("pixi.js");
 
-var _moon = _interopRequireDefault(require("../assets/moon.svg"));
-
 var _planet = _interopRequireDefault(require("./planet"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Moon = function Moon(screenWidth, screenHeight) {
+var Moon = function Moon(screenWidth, screenHeight, texture) {
   _classCallCheck(this, Moon);
 
   var position = new _pixi.Point(screenWidth / 3, screenHeight / 4);
   var length = 20;
-  return new _planet.default(position, length, _moon.default);
+  return new _planet.default(position, length, texture);
 };
 
 exports.default = Moon;
-},{"pixi.js":"node_modules/pixi.js/lib/index.js","../assets/moon.svg":"assets/moon.svg","./planet":"src/planet.js"}],"node_modules/victor/index.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/index.js","./planet":"src/planet.js"}],"node_modules/victor/index.js":[function(require,module,exports) {
 exports = module.exports = Victor;
 
 /**
@@ -50174,8 +50294,6 @@ function degrees2radian (deg) {
 	return deg / degrees;
 }
 
-},{}],"assets/star.png":[function(require,module,exports) {
-module.exports = "/star.d86a814f.png";
 },{}],"src/meteor.js":[function(require,module,exports) {
 "use strict";
 
@@ -50188,8 +50306,6 @@ var _pixi = require("pixi.js");
 
 var _victor = _interopRequireDefault(require("victor"));
 
-var _star = _interopRequireDefault(require("../assets/star.png"));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -50198,28 +50314,27 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var Meteor =
-/*#__PURE__*/
-function () {
+var Meteor = /*#__PURE__*/function () {
   _createClass(Meteor, null, [{
     key: "withRandomPosition",
-    value: function withRandomPosition(windowWidth, windowHeight) {
-      var _randomize = new _victor.default().randomize((0, _victor.default)(0, 0), (0, _victor.default)(windowWidth, windowHeight)),
-          x = _randomize.x,
-          y = _randomize.y;
+    value: function withRandomPosition(windowWidth, windowHeight, texture) {
+      var _Vector$randomize = new _victor.default().randomize((0, _victor.default)(0, 0), (0, _victor.default)(windowWidth, windowHeight)),
+          x = _Vector$randomize.x,
+          y = _Vector$randomize.y;
 
       var diameter = Math.random() * 50;
-      return new Meteor(x, y, diameter);
+      return new Meteor(x, y, diameter, texture);
     }
   }]);
 
-  function Meteor(x, y, length) {
+  function Meteor(x, y, length, texture) {
     _classCallCheck(this, Meteor);
 
     this.options = {
       position: new _pixi.Point(x, y),
       length: length
     };
+    this.texture = texture;
   }
 
   _createClass(Meteor, [{
@@ -50228,32 +50343,12 @@ function () {
       this.movement = movement;
     }
   }, {
-    key: "load",
-    value: function load(stage) {
-      var _this = this;
-
-      return new Promise(function (resolve, reject) {
-        var loaderCallback = function loaderCallback() {
-          _this.pSpriteObj = new _pixi.Sprite(_pixi.loader.resources[_star.default].texture);
-          _this.pSpriteObj.position = _this.options.position;
-          _this.pSpriteObj.width = _this.pSpriteObj.height = _this.options.length;
-          stage.addChild(_this.pSpriteObj);
-        };
-
-        try {
-          _pixi.loader.add(_star.default).load(function () {
-            loaderCallback();
-            resolve();
-          });
-        } catch (e) {
-          if (e.message.split(' ')[0].toLowerCase() == 'resource') {
-            loaderCallback();
-            resolve();
-          } else {
-            reject(e);
-          }
-        }
-      });
+    key: "setup",
+    value: function setup(stage) {
+      this.pSpriteObj = new _pixi.Sprite(_pixi.loader.resources[this.texture].texture);
+      this.pSpriteObj.position = this.options.position;
+      this.pSpriteObj.width = this.pSpriteObj.height = this.options.length;
+      stage.addChild(this.pSpriteObj);
     }
   }, {
     key: "destroy",
@@ -50283,7 +50378,63 @@ function () {
 }();
 
 exports.default = Meteor;
-},{"pixi.js":"node_modules/pixi.js/lib/index.js","victor":"node_modules/victor/index.js","../assets/star.png":"assets/star.png"}],"src/ricochetMovement.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/index.js","victor":"node_modules/victor/index.js"}],"assets/sun.svg":[function(require,module,exports) {
+module.exports = "/sun.792d5ba3.svg";
+},{}],"assets/earth.svg":[function(require,module,exports) {
+module.exports = "/earth.9719f985.svg";
+},{}],"assets/moon.svg":[function(require,module,exports) {
+module.exports = "/moon.bd014af3.svg";
+},{}],"assets/trigger.png":[function(require,module,exports) {
+module.exports = "/trigger.d69108c0.png";
+},{}],"assets/star.png":[function(require,module,exports) {
+module.exports = "/star.d86a814f.png";
+},{}],"assets/TEXT.png":[function(require,module,exports) {
+module.exports = "/TEXT.654b8051.png";
+},{}],"src/asset-loader.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _pixi = require("pixi.js");
+
+var _sun = _interopRequireDefault(require("~/assets/sun.svg"));
+
+var _earth = _interopRequireDefault(require("~/assets/earth.svg"));
+
+var _moon = _interopRequireDefault(require("~/assets/moon.svg"));
+
+var _trigger = _interopRequireDefault(require("~/assets/trigger.png"));
+
+var _star = _interopRequireDefault(require("~/assets/star.png"));
+
+var _TEXT = _interopRequireDefault(require("~/assets/TEXT.png"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = {
+  load: function load() {
+    return new Promise(function (resolve, reject) {
+      _pixi.loader.add([_sun.default, _earth.default, _moon.default, _trigger.default, _star.default, _TEXT.default]).load(function () {
+        resolve({
+          sun: _sun.default
+        });
+      });
+    });
+  },
+  map: {
+    sun: _sun.default,
+    earth: _earth.default,
+    moon: _moon.default,
+    trigger: _trigger.default,
+    meteor: _star.default,
+    text: _TEXT.default
+  }
+};
+exports.default = _default;
+},{"pixi.js":"node_modules/pixi.js/lib/index.js","~/assets/sun.svg":"assets/sun.svg","~/assets/earth.svg":"assets/earth.svg","~/assets/moon.svg":"assets/moon.svg","~/assets/trigger.png":"assets/trigger.png","~/assets/star.png":"assets/star.png","~/assets/TEXT.png":"assets/TEXT.png"}],"src/ricochetMovement.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -50301,9 +50452,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var RicochetMovement =
-/*#__PURE__*/
-function () {
+var RicochetMovement = /*#__PURE__*/function () {
   function RicochetMovement(speedFactor, windowWidth, windowHeight) {
     _classCallCheck(this, RicochetMovement);
 
@@ -50380,15 +50529,19 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var Collision =
-/*#__PURE__*/
-function () {
+var Collision = /*#__PURE__*/function () {
   function Collision(objects) {
     _classCallCheck(this, Collision);
 
@@ -50398,12 +50551,11 @@ function () {
   _createClass(Collision, [{
     key: "isCollide",
     value: function isCollide(objectPosition) {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+      var _iterator = _createForOfIteratorHelper(this.objects),
+          _step;
 
       try {
-        for (var _iterator = this.objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var element = _step.value;
 
           if (element.collideWith(objectPosition.x, objectPosition.y)) {
@@ -50411,18 +50563,9 @@ function () {
           }
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _iterator.e(err);
       } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return != null) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
+        _iterator.f();
       }
 
       return false;
@@ -50434,8 +50577,6 @@ function () {
 
 var _default = Collision;
 exports.default = _default;
-},{}],"assets/meteor-button.png":[function(require,module,exports) {
-module.exports = "/meteor-button.e03ec902.png";
 },{}],"src/spawnMeteorButton.js":[function(require,module,exports) {
 "use strict";
 
@@ -50446,46 +50587,55 @@ exports.default = void 0;
 
 var _pixi = require("pixi.js");
 
-var _meteorButton = _interopRequireDefault(require("../assets/meteor-button.png"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var SpawnMeteorButton =
-/*#__PURE__*/
-function () {
-  function SpawnMeteorButton(position, width) {
+var SpawnMeteorButton = /*#__PURE__*/function () {
+  function SpawnMeteorButton(position, btnTexture, txtTexture) {
     _classCallCheck(this, SpawnMeteorButton);
 
     this.position = new _pixi.Point(position.x, position.y);
-    this.width = width;
+    this.btnTexture = btnTexture;
+    this.txtTexture = txtTexture;
   }
 
   _createClass(SpawnMeteorButton, [{
-    key: "load",
-    value: function load(stage) {
+    key: "setup",
+    value: function setup(stage) {
       var _this = this;
 
-      return new Promise(function (resolve, reject) {
-        try {
-          _pixi.loader.add(_meteorButton.default).load(function () {
-            _this.pSpriteObj = new _pixi.Sprite(_pixi.loader.resources[_meteorButton.default].texture);
-            _this.pSpriteObj.position = _this.position;
-
-            _this.pSpriteObj.anchor.set(0.5);
-
-            stage.addChild(_this.pSpriteObj);
-            resolve();
-          });
-        } catch (e) {
-          reject(e);
-        }
+      this.pSpriteObj = this.renderBtn();
+      this.pSpriteObj.interactive = true;
+      this.pSpriteObj.on('mouseover', function () {
+        _this.pSpriteObj.width = _this.pSpriteObj.width * 1.15;
+        _this.pSpriteObj.height = _this.pSpriteObj.height * 1.15;
       });
+      this.pSpriteObj.on('mouseout', function () {
+        _this.pSpriteObj.width = _this.pSpriteObj.width * 0.85;
+        _this.pSpriteObj.height = _this.pSpriteObj.height * 0.85;
+      });
+      stage.addChild(this.pSpriteObj);
+      stage.addChild(this.renderText());
+    }
+  }, {
+    key: "renderBtn",
+    value: function renderBtn() {
+      var btn = new _pixi.Sprite(_pixi.loader.resources[this.btnTexture].texture);
+      btn.position = this.position;
+      btn.anchor.set(0.5);
+      return btn;
+    }
+  }, {
+    key: "renderText",
+    value: function renderText() {
+      var txt = new _pixi.Sprite(_pixi.loader.resources[this.txtTexture].texture);
+      txt.position = this.position;
+      txt.position.y = txt.position.y + 30;
+      txt.anchor.set(0.5);
+      return txt;
     }
   }, {
     key: "shake",
@@ -50503,7 +50653,7 @@ function () {
           offset--;
         }
 
-        if (offset > maxY && !isInvert || offset < maxY && isInvert) {
+        if (offset > maxY && !isInvert || offset <= 0 && isInvert) {
           isInvert = !isInvert;
         }
       };
@@ -50511,7 +50661,6 @@ function () {
   }, {
     key: "onClick",
     value: function onClick(callback) {
-      this.pSpriteObj.interactive = true;
       this.pSpriteObj.on('mouseover', callback);
       this.pSpriteObj.on('click', callback);
     }
@@ -50521,7 +50670,7 @@ function () {
 }();
 
 exports.default = SpawnMeteorButton;
-},{"pixi.js":"node_modules/pixi.js/lib/index.js","../assets/meteor-button.png":"assets/meteor-button.png"}],"src/main.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/index.js"}],"src/main.js":[function(require,module,exports) {
 "use strict";
 
 require("core-js/modules/es6.array.copy-within");
@@ -50531,6 +50680,8 @@ require("core-js/modules/es6.array.fill");
 require("core-js/modules/es6.array.find");
 
 require("core-js/modules/es6.array.find-index");
+
+require("core-js/modules/es7.array.flat-map");
 
 require("core-js/modules/es6.array.from");
 
@@ -50544,9 +50695,9 @@ require("core-js/modules/es6.array.sort");
 
 require("core-js/modules/es6.array.species");
 
-require("core-js/modules/es6.date.to-json");
-
 require("core-js/modules/es6.date.to-primitive");
+
+require("core-js/modules/es6.date.to-string");
 
 require("core-js/modules/es6.function.has-instance");
 
@@ -50631,6 +50782,8 @@ require("core-js/modules/es7.object.lookup-getter");
 require("core-js/modules/es7.object.lookup-setter");
 
 require("core-js/modules/es6.object.prevent-extensions");
+
+require("core-js/modules/es6.object.to-string");
 
 require("core-js/modules/es6.object.is");
 
@@ -50744,7 +50897,13 @@ require("core-js/modules/es6.string.sub");
 
 require("core-js/modules/es6.string.sup");
 
+require("core-js/modules/es7.string.trim-left");
+
+require("core-js/modules/es7.string.trim-right");
+
 require("core-js/modules/es6.typed.array-buffer");
+
+require("core-js/modules/es6.typed.data-view");
 
 require("core-js/modules/es6.typed.int8-array");
 
@@ -50768,8 +50927,6 @@ require("core-js/modules/es6.weak-map");
 
 require("core-js/modules/es6.weak-set");
 
-require("core-js/modules/es7.array.flat-map");
-
 require("core-js/modules/web.timers");
 
 require("core-js/modules/web.immediate");
@@ -50788,6 +50945,8 @@ var _moon = _interopRequireDefault(require("./moon.js"));
 
 var _meteor = _interopRequireDefault(require("./meteor.js"));
 
+var _assetLoader = _interopRequireDefault(require("./asset-loader"));
+
 var _ricochetMovement = _interopRequireDefault(require("./ricochetMovement.js"));
 
 var _collision = _interopRequireDefault(require("./collision.js"));
@@ -50796,63 +50955,39 @@ var _spawnMeteorButton = _interopRequireDefault(require("./spawnMeteorButton.js"
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function spawnRandomMeteor(_x, _x2, _x3, _x4, _x5) {
-  return _spawnRandomMeteor.apply(this, arguments);
+function spawnRandomMeteor(windowWidth, windowHeight, sunCollision, ticker, stage, meteorTexture) {
+  var meteor = _meteor.default.withRandomPosition(windowWidth, windowHeight, meteorTexture);
+
+  meteor.setMovement(new _ricochetMovement.default(6, windowWidth, windowHeight));
+  meteor.setup(stage);
+
+  var meteorAnimation = function meteorAnimation() {
+    meteor.shoot();
+
+    if (meteor.collide(sunCollision)) {
+      ticker.remove(meteorAnimation);
+      meteor.destroy();
+    }
+  };
+
+  ticker.add(meteorAnimation);
 }
 
-function _spawnRandomMeteor() {
-  _spawnRandomMeteor = _asyncToGenerator(
-  /*#__PURE__*/
-  regeneratorRuntime.mark(function _callee3(windowWidth, windowHeight, sunCollision, ticker, stage) {
-    var meteor, meteorAnimation;
-    return regeneratorRuntime.wrap(function _callee3$(_context3) {
-      while (1) {
-        switch (_context3.prev = _context3.next) {
-          case 0:
-            meteor = _meteor.default.withRandomPosition(windowWidth, windowHeight);
-            meteor.setMovement(new _ricochetMovement.default(6, windowWidth, windowHeight));
-            _context3.next = 4;
-            return meteor.load(stage);
-
-          case 4:
-            meteorAnimation = function meteorAnimation() {
-              meteor.shoot();
-
-              if (meteor.collide(sunCollision)) {
-                ticker.remove(meteorAnimation);
-                meteor.destroy();
-              }
-            };
-
-            ticker.add(meteorAnimation);
-
-          case 6:
-          case "end":
-            return _context3.stop();
-        }
-      }
-    }, _callee3);
-  }));
-  return _spawnRandomMeteor.apply(this, arguments);
-}
-
-document.addEventListener('DOMContentLoaded',
-/*#__PURE__*/
-function () {
-  var _ref = _asyncToGenerator(
-  /*#__PURE__*/
-  regeneratorRuntime.mark(function _callee2(event) {
+document.addEventListener('DOMContentLoaded', /*#__PURE__*/function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(event) {
     var app, _app$screen, appWidth, appHeight, sun, earth, moon, spawnMeteorButton, sunCollision, buttonShake;
 
-    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+    return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
-        switch (_context2.prev = _context2.next) {
+        switch (_context.prev = _context.next) {
           case 0:
             app = new P.Application({
               width: window.outerWidth - 20,
@@ -50861,73 +50996,46 @@ function () {
             app.renderer.backgroundColor = 0x071335;
             document.body.appendChild(app.view);
             _app$screen = app.screen, appWidth = _app$screen.width, appHeight = _app$screen.height;
-            sun = new _sun.default(appWidth, appHeight);
-            earth = new _earth.default(appWidth, appHeight);
-            moon = new _moon.default(appWidth, appHeight);
+            _context.next = 6;
+            return _assetLoader.default.load();
+
+          case 6:
+            sun = new _sun.default(appWidth, appHeight, _assetLoader.default.map.sun);
+            earth = new _earth.default(appWidth, appHeight, _assetLoader.default.map.earth);
+            moon = new _moon.default(appWidth, appHeight, _assetLoader.default.map.moon);
             spawnMeteorButton = new _spawnMeteorButton.default({
               x: 100,
               y: appHeight / 10
-            });
+            }, _assetLoader.default.map.trigger, _assetLoader.default.map.text);
             sunCollision = new _collision.default([sun]);
-            _context2.next = 11;
-            return sun.load(app.stage);
-
-          case 11:
-            _context2.next = 13;
-            return earth.load(app.stage);
-
-          case 13:
-            _context2.next = 15;
-            return moon.load(app.stage);
-
-          case 15:
-            _context2.next = 17;
-            return spawnMeteorButton.load(app.stage);
-
-          case 17:
+            sun.setup(app.stage);
+            earth.setup(app.stage);
+            moon.setup(app.stage);
+            spawnMeteorButton.setup(app.stage);
             sun.spin(app.ticker, 0.05);
             earth.spin(app.ticker, 0.02);
             moon.spin(app.ticker, 0.005);
-            buttonShake = spawnMeteorButton.shake(3, 3);
+            buttonShake = spawnMeteorButton.shake(3, 0.4);
             app.ticker.add(buttonShake);
-            spawnMeteorButton.onClick(
-            /*#__PURE__*/
-            _asyncToGenerator(
-            /*#__PURE__*/
-            regeneratorRuntime.mark(function _callee() {
-              return regeneratorRuntime.wrap(function _callee$(_context) {
-                while (1) {
-                  switch (_context.prev = _context.next) {
-                    case 0:
-                      _context.next = 2;
-                      return spawnRandomMeteor(appWidth, appHeight, sunCollision, app.ticker, app.stage);
-
-                    case 2:
-                      return _context.abrupt("return", _context.sent);
-
-                    case 3:
-                    case "end":
-                      return _context.stop();
-                  }
-                }
-              }, _callee);
-            })));
+            spawnMeteorButton.onClick(function () {
+              return spawnRandomMeteor(appWidth, appHeight, sunCollision, app.ticker, app.stage, _assetLoader.default.map.meteor);
+            });
             earth.rotate(app.ticker, 300, 0.006, sun);
             moon.rotate(app.ticker, 100, 0.05, earth);
 
-          case 25:
+          case 23:
           case "end":
-            return _context2.stop();
+            return _context.stop();
         }
       }
-    }, _callee2);
+    }, _callee);
   }));
 
-  return function (_x6) {
+  return function (_x) {
     return _ref.apply(this, arguments);
   };
 }());
-},{"core-js/modules/es6.array.copy-within":"node_modules/core-js/modules/es6.array.copy-within.js","core-js/modules/es6.array.fill":"node_modules/core-js/modules/es6.array.fill.js","core-js/modules/es6.array.find":"node_modules/core-js/modules/es6.array.find.js","core-js/modules/es6.array.find-index":"node_modules/core-js/modules/es6.array.find-index.js","core-js/modules/es6.array.from":"node_modules/core-js/modules/es6.array.from.js","core-js/modules/es7.array.includes":"node_modules/core-js/modules/es7.array.includes.js","core-js/modules/es6.array.iterator":"node_modules/core-js/modules/es6.array.iterator.js","core-js/modules/es6.array.of":"node_modules/core-js/modules/es6.array.of.js","core-js/modules/es6.array.sort":"node_modules/core-js/modules/es6.array.sort.js","core-js/modules/es6.array.species":"node_modules/core-js/modules/es6.array.species.js","core-js/modules/es6.date.to-json":"node_modules/core-js/modules/es6.date.to-json.js","core-js/modules/es6.date.to-primitive":"node_modules/core-js/modules/es6.date.to-primitive.js","core-js/modules/es6.function.has-instance":"node_modules/core-js/modules/es6.function.has-instance.js","core-js/modules/es6.function.name":"node_modules/core-js/modules/es6.function.name.js","core-js/modules/es6.map":"node_modules/core-js/modules/es6.map.js","core-js/modules/es6.math.acosh":"node_modules/core-js/modules/es6.math.acosh.js","core-js/modules/es6.math.asinh":"node_modules/core-js/modules/es6.math.asinh.js","core-js/modules/es6.math.atanh":"node_modules/core-js/modules/es6.math.atanh.js","core-js/modules/es6.math.cbrt":"node_modules/core-js/modules/es6.math.cbrt.js","core-js/modules/es6.math.clz32":"node_modules/core-js/modules/es6.math.clz32.js","core-js/modules/es6.math.cosh":"node_modules/core-js/modules/es6.math.cosh.js","core-js/modules/es6.math.expm1":"node_modules/core-js/modules/es6.math.expm1.js","core-js/modules/es6.math.fround":"node_modules/core-js/modules/es6.math.fround.js","core-js/modules/es6.math.hypot":"node_modules/core-js/modules/es6.math.hypot.js","core-js/modules/es6.math.imul":"node_modules/core-js/modules/es6.math.imul.js","core-js/modules/es6.math.log1p":"node_modules/core-js/modules/es6.math.log1p.js","core-js/modules/es6.math.log10":"node_modules/core-js/modules/es6.math.log10.js","core-js/modules/es6.math.log2":"node_modules/core-js/modules/es6.math.log2.js","core-js/modules/es6.math.sign":"node_modules/core-js/modules/es6.math.sign.js","core-js/modules/es6.math.sinh":"node_modules/core-js/modules/es6.math.sinh.js","core-js/modules/es6.math.tanh":"node_modules/core-js/modules/es6.math.tanh.js","core-js/modules/es6.math.trunc":"node_modules/core-js/modules/es6.math.trunc.js","core-js/modules/es6.number.constructor":"node_modules/core-js/modules/es6.number.constructor.js","core-js/modules/es6.number.epsilon":"node_modules/core-js/modules/es6.number.epsilon.js","core-js/modules/es6.number.is-finite":"node_modules/core-js/modules/es6.number.is-finite.js","core-js/modules/es6.number.is-integer":"node_modules/core-js/modules/es6.number.is-integer.js","core-js/modules/es6.number.is-nan":"node_modules/core-js/modules/es6.number.is-nan.js","core-js/modules/es6.number.is-safe-integer":"node_modules/core-js/modules/es6.number.is-safe-integer.js","core-js/modules/es6.number.max-safe-integer":"node_modules/core-js/modules/es6.number.max-safe-integer.js","core-js/modules/es6.number.min-safe-integer":"node_modules/core-js/modules/es6.number.min-safe-integer.js","core-js/modules/es6.number.parse-float":"node_modules/core-js/modules/es6.number.parse-float.js","core-js/modules/es6.number.parse-int":"node_modules/core-js/modules/es6.number.parse-int.js","core-js/modules/es6.object.assign":"node_modules/core-js/modules/es6.object.assign.js","core-js/modules/es7.object.define-getter":"node_modules/core-js/modules/es7.object.define-getter.js","core-js/modules/es7.object.define-setter":"node_modules/core-js/modules/es7.object.define-setter.js","core-js/modules/es7.object.entries":"node_modules/core-js/modules/es7.object.entries.js","core-js/modules/es6.object.freeze":"node_modules/core-js/modules/es6.object.freeze.js","core-js/modules/es6.object.get-own-property-descriptor":"node_modules/core-js/modules/es6.object.get-own-property-descriptor.js","core-js/modules/es7.object.get-own-property-descriptors":"node_modules/core-js/modules/es7.object.get-own-property-descriptors.js","core-js/modules/es6.object.get-own-property-names":"node_modules/core-js/modules/es6.object.get-own-property-names.js","core-js/modules/es6.object.get-prototype-of":"node_modules/core-js/modules/es6.object.get-prototype-of.js","core-js/modules/es7.object.lookup-getter":"node_modules/core-js/modules/es7.object.lookup-getter.js","core-js/modules/es7.object.lookup-setter":"node_modules/core-js/modules/es7.object.lookup-setter.js","core-js/modules/es6.object.prevent-extensions":"node_modules/core-js/modules/es6.object.prevent-extensions.js","core-js/modules/es6.object.is":"node_modules/core-js/modules/es6.object.is.js","core-js/modules/es6.object.is-frozen":"node_modules/core-js/modules/es6.object.is-frozen.js","core-js/modules/es6.object.is-sealed":"node_modules/core-js/modules/es6.object.is-sealed.js","core-js/modules/es6.object.is-extensible":"node_modules/core-js/modules/es6.object.is-extensible.js","core-js/modules/es6.object.keys":"node_modules/core-js/modules/es6.object.keys.js","core-js/modules/es6.object.seal":"node_modules/core-js/modules/es6.object.seal.js","core-js/modules/es6.object.set-prototype-of":"node_modules/core-js/modules/es6.object.set-prototype-of.js","core-js/modules/es7.object.values":"node_modules/core-js/modules/es7.object.values.js","core-js/modules/es6.promise":"node_modules/core-js/modules/es6.promise.js","core-js/modules/es7.promise.finally":"node_modules/core-js/modules/es7.promise.finally.js","core-js/modules/es6.reflect.apply":"node_modules/core-js/modules/es6.reflect.apply.js","core-js/modules/es6.reflect.construct":"node_modules/core-js/modules/es6.reflect.construct.js","core-js/modules/es6.reflect.define-property":"node_modules/core-js/modules/es6.reflect.define-property.js","core-js/modules/es6.reflect.delete-property":"node_modules/core-js/modules/es6.reflect.delete-property.js","core-js/modules/es6.reflect.get":"node_modules/core-js/modules/es6.reflect.get.js","core-js/modules/es6.reflect.get-own-property-descriptor":"node_modules/core-js/modules/es6.reflect.get-own-property-descriptor.js","core-js/modules/es6.reflect.get-prototype-of":"node_modules/core-js/modules/es6.reflect.get-prototype-of.js","core-js/modules/es6.reflect.has":"node_modules/core-js/modules/es6.reflect.has.js","core-js/modules/es6.reflect.is-extensible":"node_modules/core-js/modules/es6.reflect.is-extensible.js","core-js/modules/es6.reflect.own-keys":"node_modules/core-js/modules/es6.reflect.own-keys.js","core-js/modules/es6.reflect.prevent-extensions":"node_modules/core-js/modules/es6.reflect.prevent-extensions.js","core-js/modules/es6.reflect.set":"node_modules/core-js/modules/es6.reflect.set.js","core-js/modules/es6.reflect.set-prototype-of":"node_modules/core-js/modules/es6.reflect.set-prototype-of.js","core-js/modules/es6.regexp.constructor":"node_modules/core-js/modules/es6.regexp.constructor.js","core-js/modules/es6.regexp.flags":"node_modules/core-js/modules/es6.regexp.flags.js","core-js/modules/es6.regexp.match":"node_modules/core-js/modules/es6.regexp.match.js","core-js/modules/es6.regexp.replace":"node_modules/core-js/modules/es6.regexp.replace.js","core-js/modules/es6.regexp.split":"node_modules/core-js/modules/es6.regexp.split.js","core-js/modules/es6.regexp.search":"node_modules/core-js/modules/es6.regexp.search.js","core-js/modules/es6.regexp.to-string":"node_modules/core-js/modules/es6.regexp.to-string.js","core-js/modules/es6.set":"node_modules/core-js/modules/es6.set.js","core-js/modules/es6.symbol":"node_modules/core-js/modules/es6.symbol.js","core-js/modules/es7.symbol.async-iterator":"node_modules/core-js/modules/es7.symbol.async-iterator.js","core-js/modules/es6.string.anchor":"node_modules/core-js/modules/es6.string.anchor.js","core-js/modules/es6.string.big":"node_modules/core-js/modules/es6.string.big.js","core-js/modules/es6.string.blink":"node_modules/core-js/modules/es6.string.blink.js","core-js/modules/es6.string.bold":"node_modules/core-js/modules/es6.string.bold.js","core-js/modules/es6.string.code-point-at":"node_modules/core-js/modules/es6.string.code-point-at.js","core-js/modules/es6.string.ends-with":"node_modules/core-js/modules/es6.string.ends-with.js","core-js/modules/es6.string.fixed":"node_modules/core-js/modules/es6.string.fixed.js","core-js/modules/es6.string.fontcolor":"node_modules/core-js/modules/es6.string.fontcolor.js","core-js/modules/es6.string.fontsize":"node_modules/core-js/modules/es6.string.fontsize.js","core-js/modules/es6.string.from-code-point":"node_modules/core-js/modules/es6.string.from-code-point.js","core-js/modules/es6.string.includes":"node_modules/core-js/modules/es6.string.includes.js","core-js/modules/es6.string.italics":"node_modules/core-js/modules/es6.string.italics.js","core-js/modules/es6.string.iterator":"node_modules/core-js/modules/es6.string.iterator.js","core-js/modules/es6.string.link":"node_modules/core-js/modules/es6.string.link.js","core-js/modules/es7.string.pad-start":"node_modules/core-js/modules/es7.string.pad-start.js","core-js/modules/es7.string.pad-end":"node_modules/core-js/modules/es7.string.pad-end.js","core-js/modules/es6.string.raw":"node_modules/core-js/modules/es6.string.raw.js","core-js/modules/es6.string.repeat":"node_modules/core-js/modules/es6.string.repeat.js","core-js/modules/es6.string.small":"node_modules/core-js/modules/es6.string.small.js","core-js/modules/es6.string.starts-with":"node_modules/core-js/modules/es6.string.starts-with.js","core-js/modules/es6.string.strike":"node_modules/core-js/modules/es6.string.strike.js","core-js/modules/es6.string.sub":"node_modules/core-js/modules/es6.string.sub.js","core-js/modules/es6.string.sup":"node_modules/core-js/modules/es6.string.sup.js","core-js/modules/es6.typed.array-buffer":"node_modules/core-js/modules/es6.typed.array-buffer.js","core-js/modules/es6.typed.int8-array":"node_modules/core-js/modules/es6.typed.int8-array.js","core-js/modules/es6.typed.uint8-array":"node_modules/core-js/modules/es6.typed.uint8-array.js","core-js/modules/es6.typed.uint8-clamped-array":"node_modules/core-js/modules/es6.typed.uint8-clamped-array.js","core-js/modules/es6.typed.int16-array":"node_modules/core-js/modules/es6.typed.int16-array.js","core-js/modules/es6.typed.uint16-array":"node_modules/core-js/modules/es6.typed.uint16-array.js","core-js/modules/es6.typed.int32-array":"node_modules/core-js/modules/es6.typed.int32-array.js","core-js/modules/es6.typed.uint32-array":"node_modules/core-js/modules/es6.typed.uint32-array.js","core-js/modules/es6.typed.float32-array":"node_modules/core-js/modules/es6.typed.float32-array.js","core-js/modules/es6.typed.float64-array":"node_modules/core-js/modules/es6.typed.float64-array.js","core-js/modules/es6.weak-map":"node_modules/core-js/modules/es6.weak-map.js","core-js/modules/es6.weak-set":"node_modules/core-js/modules/es6.weak-set.js","core-js/modules/es7.array.flat-map":"node_modules/core-js/modules/es7.array.flat-map.js","core-js/modules/web.timers":"node_modules/core-js/modules/web.timers.js","core-js/modules/web.immediate":"node_modules/core-js/modules/web.immediate.js","core-js/modules/web.dom.iterable":"node_modules/core-js/modules/web.dom.iterable.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js","pixi.js":"node_modules/pixi.js/lib/index.js","./sun.js":"src/sun.js","./earth.js":"src/earth.js","./moon.js":"src/moon.js","./meteor.js":"src/meteor.js","./ricochetMovement.js":"src/ricochetMovement.js","./collision.js":"src/collision.js","./spawnMeteorButton.js":"src/spawnMeteorButton.js"}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"core-js/modules/es6.array.copy-within":"node_modules/core-js/modules/es6.array.copy-within.js","core-js/modules/es6.array.fill":"node_modules/core-js/modules/es6.array.fill.js","core-js/modules/es6.array.find":"node_modules/core-js/modules/es6.array.find.js","core-js/modules/es6.array.find-index":"node_modules/core-js/modules/es6.array.find-index.js","core-js/modules/es7.array.flat-map":"node_modules/core-js/modules/es7.array.flat-map.js","core-js/modules/es6.array.from":"node_modules/core-js/modules/es6.array.from.js","core-js/modules/es7.array.includes":"node_modules/core-js/modules/es7.array.includes.js","core-js/modules/es6.array.iterator":"node_modules/core-js/modules/es6.array.iterator.js","core-js/modules/es6.array.of":"node_modules/core-js/modules/es6.array.of.js","core-js/modules/es6.array.sort":"node_modules/core-js/modules/es6.array.sort.js","core-js/modules/es6.array.species":"node_modules/core-js/modules/es6.array.species.js","core-js/modules/es6.date.to-primitive":"node_modules/core-js/modules/es6.date.to-primitive.js","core-js/modules/es6.date.to-string":"node_modules/core-js/modules/es6.date.to-string.js","core-js/modules/es6.function.has-instance":"node_modules/core-js/modules/es6.function.has-instance.js","core-js/modules/es6.function.name":"node_modules/core-js/modules/es6.function.name.js","core-js/modules/es6.map":"node_modules/core-js/modules/es6.map.js","core-js/modules/es6.math.acosh":"node_modules/core-js/modules/es6.math.acosh.js","core-js/modules/es6.math.asinh":"node_modules/core-js/modules/es6.math.asinh.js","core-js/modules/es6.math.atanh":"node_modules/core-js/modules/es6.math.atanh.js","core-js/modules/es6.math.cbrt":"node_modules/core-js/modules/es6.math.cbrt.js","core-js/modules/es6.math.clz32":"node_modules/core-js/modules/es6.math.clz32.js","core-js/modules/es6.math.cosh":"node_modules/core-js/modules/es6.math.cosh.js","core-js/modules/es6.math.expm1":"node_modules/core-js/modules/es6.math.expm1.js","core-js/modules/es6.math.fround":"node_modules/core-js/modules/es6.math.fround.js","core-js/modules/es6.math.hypot":"node_modules/core-js/modules/es6.math.hypot.js","core-js/modules/es6.math.imul":"node_modules/core-js/modules/es6.math.imul.js","core-js/modules/es6.math.log1p":"node_modules/core-js/modules/es6.math.log1p.js","core-js/modules/es6.math.log10":"node_modules/core-js/modules/es6.math.log10.js","core-js/modules/es6.math.log2":"node_modules/core-js/modules/es6.math.log2.js","core-js/modules/es6.math.sign":"node_modules/core-js/modules/es6.math.sign.js","core-js/modules/es6.math.sinh":"node_modules/core-js/modules/es6.math.sinh.js","core-js/modules/es6.math.tanh":"node_modules/core-js/modules/es6.math.tanh.js","core-js/modules/es6.math.trunc":"node_modules/core-js/modules/es6.math.trunc.js","core-js/modules/es6.number.constructor":"node_modules/core-js/modules/es6.number.constructor.js","core-js/modules/es6.number.epsilon":"node_modules/core-js/modules/es6.number.epsilon.js","core-js/modules/es6.number.is-finite":"node_modules/core-js/modules/es6.number.is-finite.js","core-js/modules/es6.number.is-integer":"node_modules/core-js/modules/es6.number.is-integer.js","core-js/modules/es6.number.is-nan":"node_modules/core-js/modules/es6.number.is-nan.js","core-js/modules/es6.number.is-safe-integer":"node_modules/core-js/modules/es6.number.is-safe-integer.js","core-js/modules/es6.number.max-safe-integer":"node_modules/core-js/modules/es6.number.max-safe-integer.js","core-js/modules/es6.number.min-safe-integer":"node_modules/core-js/modules/es6.number.min-safe-integer.js","core-js/modules/es6.number.parse-float":"node_modules/core-js/modules/es6.number.parse-float.js","core-js/modules/es6.number.parse-int":"node_modules/core-js/modules/es6.number.parse-int.js","core-js/modules/es6.object.assign":"node_modules/core-js/modules/es6.object.assign.js","core-js/modules/es7.object.define-getter":"node_modules/core-js/modules/es7.object.define-getter.js","core-js/modules/es7.object.define-setter":"node_modules/core-js/modules/es7.object.define-setter.js","core-js/modules/es7.object.entries":"node_modules/core-js/modules/es7.object.entries.js","core-js/modules/es6.object.freeze":"node_modules/core-js/modules/es6.object.freeze.js","core-js/modules/es6.object.get-own-property-descriptor":"node_modules/core-js/modules/es6.object.get-own-property-descriptor.js","core-js/modules/es7.object.get-own-property-descriptors":"node_modules/core-js/modules/es7.object.get-own-property-descriptors.js","core-js/modules/es6.object.get-own-property-names":"node_modules/core-js/modules/es6.object.get-own-property-names.js","core-js/modules/es6.object.get-prototype-of":"node_modules/core-js/modules/es6.object.get-prototype-of.js","core-js/modules/es7.object.lookup-getter":"node_modules/core-js/modules/es7.object.lookup-getter.js","core-js/modules/es7.object.lookup-setter":"node_modules/core-js/modules/es7.object.lookup-setter.js","core-js/modules/es6.object.prevent-extensions":"node_modules/core-js/modules/es6.object.prevent-extensions.js","core-js/modules/es6.object.to-string":"node_modules/core-js/modules/es6.object.to-string.js","core-js/modules/es6.object.is":"node_modules/core-js/modules/es6.object.is.js","core-js/modules/es6.object.is-frozen":"node_modules/core-js/modules/es6.object.is-frozen.js","core-js/modules/es6.object.is-sealed":"node_modules/core-js/modules/es6.object.is-sealed.js","core-js/modules/es6.object.is-extensible":"node_modules/core-js/modules/es6.object.is-extensible.js","core-js/modules/es6.object.keys":"node_modules/core-js/modules/es6.object.keys.js","core-js/modules/es6.object.seal":"node_modules/core-js/modules/es6.object.seal.js","core-js/modules/es6.object.set-prototype-of":"node_modules/core-js/modules/es6.object.set-prototype-of.js","core-js/modules/es7.object.values":"node_modules/core-js/modules/es7.object.values.js","core-js/modules/es6.promise":"node_modules/core-js/modules/es6.promise.js","core-js/modules/es7.promise.finally":"node_modules/core-js/modules/es7.promise.finally.js","core-js/modules/es6.reflect.apply":"node_modules/core-js/modules/es6.reflect.apply.js","core-js/modules/es6.reflect.construct":"node_modules/core-js/modules/es6.reflect.construct.js","core-js/modules/es6.reflect.define-property":"node_modules/core-js/modules/es6.reflect.define-property.js","core-js/modules/es6.reflect.delete-property":"node_modules/core-js/modules/es6.reflect.delete-property.js","core-js/modules/es6.reflect.get":"node_modules/core-js/modules/es6.reflect.get.js","core-js/modules/es6.reflect.get-own-property-descriptor":"node_modules/core-js/modules/es6.reflect.get-own-property-descriptor.js","core-js/modules/es6.reflect.get-prototype-of":"node_modules/core-js/modules/es6.reflect.get-prototype-of.js","core-js/modules/es6.reflect.has":"node_modules/core-js/modules/es6.reflect.has.js","core-js/modules/es6.reflect.is-extensible":"node_modules/core-js/modules/es6.reflect.is-extensible.js","core-js/modules/es6.reflect.own-keys":"node_modules/core-js/modules/es6.reflect.own-keys.js","core-js/modules/es6.reflect.prevent-extensions":"node_modules/core-js/modules/es6.reflect.prevent-extensions.js","core-js/modules/es6.reflect.set":"node_modules/core-js/modules/es6.reflect.set.js","core-js/modules/es6.reflect.set-prototype-of":"node_modules/core-js/modules/es6.reflect.set-prototype-of.js","core-js/modules/es6.regexp.constructor":"node_modules/core-js/modules/es6.regexp.constructor.js","core-js/modules/es6.regexp.flags":"node_modules/core-js/modules/es6.regexp.flags.js","core-js/modules/es6.regexp.match":"node_modules/core-js/modules/es6.regexp.match.js","core-js/modules/es6.regexp.replace":"node_modules/core-js/modules/es6.regexp.replace.js","core-js/modules/es6.regexp.split":"node_modules/core-js/modules/es6.regexp.split.js","core-js/modules/es6.regexp.search":"node_modules/core-js/modules/es6.regexp.search.js","core-js/modules/es6.regexp.to-string":"node_modules/core-js/modules/es6.regexp.to-string.js","core-js/modules/es6.set":"node_modules/core-js/modules/es6.set.js","core-js/modules/es6.symbol":"node_modules/core-js/modules/es6.symbol.js","core-js/modules/es7.symbol.async-iterator":"node_modules/core-js/modules/es7.symbol.async-iterator.js","core-js/modules/es6.string.anchor":"node_modules/core-js/modules/es6.string.anchor.js","core-js/modules/es6.string.big":"node_modules/core-js/modules/es6.string.big.js","core-js/modules/es6.string.blink":"node_modules/core-js/modules/es6.string.blink.js","core-js/modules/es6.string.bold":"node_modules/core-js/modules/es6.string.bold.js","core-js/modules/es6.string.code-point-at":"node_modules/core-js/modules/es6.string.code-point-at.js","core-js/modules/es6.string.ends-with":"node_modules/core-js/modules/es6.string.ends-with.js","core-js/modules/es6.string.fixed":"node_modules/core-js/modules/es6.string.fixed.js","core-js/modules/es6.string.fontcolor":"node_modules/core-js/modules/es6.string.fontcolor.js","core-js/modules/es6.string.fontsize":"node_modules/core-js/modules/es6.string.fontsize.js","core-js/modules/es6.string.from-code-point":"node_modules/core-js/modules/es6.string.from-code-point.js","core-js/modules/es6.string.includes":"node_modules/core-js/modules/es6.string.includes.js","core-js/modules/es6.string.italics":"node_modules/core-js/modules/es6.string.italics.js","core-js/modules/es6.string.iterator":"node_modules/core-js/modules/es6.string.iterator.js","core-js/modules/es6.string.link":"node_modules/core-js/modules/es6.string.link.js","core-js/modules/es7.string.pad-start":"node_modules/core-js/modules/es7.string.pad-start.js","core-js/modules/es7.string.pad-end":"node_modules/core-js/modules/es7.string.pad-end.js","core-js/modules/es6.string.raw":"node_modules/core-js/modules/es6.string.raw.js","core-js/modules/es6.string.repeat":"node_modules/core-js/modules/es6.string.repeat.js","core-js/modules/es6.string.small":"node_modules/core-js/modules/es6.string.small.js","core-js/modules/es6.string.starts-with":"node_modules/core-js/modules/es6.string.starts-with.js","core-js/modules/es6.string.strike":"node_modules/core-js/modules/es6.string.strike.js","core-js/modules/es6.string.sub":"node_modules/core-js/modules/es6.string.sub.js","core-js/modules/es6.string.sup":"node_modules/core-js/modules/es6.string.sup.js","core-js/modules/es7.string.trim-left":"node_modules/core-js/modules/es7.string.trim-left.js","core-js/modules/es7.string.trim-right":"node_modules/core-js/modules/es7.string.trim-right.js","core-js/modules/es6.typed.array-buffer":"node_modules/core-js/modules/es6.typed.array-buffer.js","core-js/modules/es6.typed.data-view":"node_modules/core-js/modules/es6.typed.data-view.js","core-js/modules/es6.typed.int8-array":"node_modules/core-js/modules/es6.typed.int8-array.js","core-js/modules/es6.typed.uint8-array":"node_modules/core-js/modules/es6.typed.uint8-array.js","core-js/modules/es6.typed.uint8-clamped-array":"node_modules/core-js/modules/es6.typed.uint8-clamped-array.js","core-js/modules/es6.typed.int16-array":"node_modules/core-js/modules/es6.typed.int16-array.js","core-js/modules/es6.typed.uint16-array":"node_modules/core-js/modules/es6.typed.uint16-array.js","core-js/modules/es6.typed.int32-array":"node_modules/core-js/modules/es6.typed.int32-array.js","core-js/modules/es6.typed.uint32-array":"node_modules/core-js/modules/es6.typed.uint32-array.js","core-js/modules/es6.typed.float32-array":"node_modules/core-js/modules/es6.typed.float32-array.js","core-js/modules/es6.typed.float64-array":"node_modules/core-js/modules/es6.typed.float64-array.js","core-js/modules/es6.weak-map":"node_modules/core-js/modules/es6.weak-map.js","core-js/modules/es6.weak-set":"node_modules/core-js/modules/es6.weak-set.js","core-js/modules/web.timers":"node_modules/core-js/modules/web.timers.js","core-js/modules/web.immediate":"node_modules/core-js/modules/web.immediate.js","core-js/modules/web.dom.iterable":"node_modules/core-js/modules/web.dom.iterable.js","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js","pixi.js":"node_modules/pixi.js/lib/index.js","./sun.js":"src/sun.js","./earth.js":"src/earth.js","./moon.js":"src/moon.js","./meteor.js":"src/meteor.js","./asset-loader":"src/asset-loader.js","./ricochetMovement.js":"src/ricochetMovement.js","./collision.js":"src/collision.js","./spawnMeteorButton.js":"src/spawnMeteorButton.js"}],"node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -50955,7 +51063,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49409" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51933" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -50986,8 +51094,9 @@ if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
         assetsToAccept.forEach(function (v) {
           hmrAcceptRun(v[0], v[1]);
         });
-      } else {
-        window.location.reload();
+      } else if (location.reload) {
+        // `location` global exists in a web worker context but lacks `.reload()` function.
+        location.reload();
       }
     }
 
