@@ -4,6 +4,7 @@ import earth from '~/assets/earth.svg';
 import moon from '~/assets/moon.svg';
 import trigger from '~/assets/trigger.png';
 import meteor from '~/assets/star.png';
+import text from '~/assets/TEXT.png';
 
 export default {
   load: () => {
@@ -14,7 +15,8 @@ export default {
           earth,
           moon,
           trigger,
-          meteor
+          meteor,
+          text
         ])
         .load(() => {
           resolve({
@@ -28,6 +30,7 @@ export default {
     earth,
     moon,
     trigger,
-    meteor
+    meteor,
+    text
   }
 }

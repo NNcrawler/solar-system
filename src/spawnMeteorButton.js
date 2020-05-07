@@ -1,17 +1,14 @@
 import { Sprite, loader, Point } from 'pixi.js';
 
 export default class SpawnMeteorButton {
-  constructor(position, texture) {
+  constructor(position, btnTexture, txtTexture) {
     this.position = new Point(position.x, position.y);
-    this.texture = texture;
+    this.btnTexture = btnTexture;
+    this.txtTexture = txtTexture;
   }
 
   setup(stage) {
-    this.pSpriteObj = new Sprite(
-      loader.resources[this.texture].texture
-    );
-    this.pSpriteObj.position = this.position;
-    this.pSpriteObj.anchor.set(0.5);
+    this.pSpriteObj = this.renderBtn();
 
     this.pSpriteObj.interactive = true;
     this.pSpriteObj.on('mouseover', () => {
@@ -24,6 +21,27 @@ export default class SpawnMeteorButton {
     })
 
     stage.addChild(this.pSpriteObj);
+    stage.addChild(this.renderText());
+  }
+
+  renderBtn() {
+    const btn = new Sprite(
+      loader.resources[this.btnTexture].texture
+    );
+    btn.position = this.position;
+    btn.anchor.set(0.5);
+
+    return btn;
+  }
+
+  renderText() {
+    const txt = new Sprite(
+      loader.resources[this.txtTexture].texture
+    );
+    txt.position = this.position;
+    txt.position.y = txt.position.y + 30;
+    txt.anchor.set(0.5);
+    return txt;
   }
 
   shake(maxY, adder) {
@@ -37,13 +55,7 @@ export default class SpawnMeteorButton {
         this.pSpriteObj.y -= adder;
         offset--;
       }
-      console.log(isInvert);
-      console.log(this.position.y);
-      console.log(offset);
-      
-      
-      
-      if ((offset > maxY && !isInvert) || (offset <= 0  && isInvert)) {
+      if ((offset > maxY && !isInvert) || (offset <= 0 && isInvert)) {
         isInvert = !isInvert;
       }
     };

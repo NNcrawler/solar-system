@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async function (event) {
   const spawnMeteorButton = new SpawnMeteorButton({
     x: 100,
     y: appHeight / 10
-  }, Loader.map.trigger);
+  }, Loader.map.trigger, Loader.map.text);
 
   const sunCollision = new Collision([sun]);
 
