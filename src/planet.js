@@ -11,23 +11,14 @@ export default class Planet {
     this.count = 0;
   }
 
-  load(stage) {
-    return new Promise((resolve, reject) => {
-      const { position, length, assetSource } = this.spriteOptions;
-      try {
-        loader.add(assetSource).load(() => {
-          this.pSpriteObj = new Sprite(loader.resources[assetSource].texture);
-          this.pSpriteObj.position = position;
-          this.pSpriteObj.width = this.pSpriteObj.height = length;
-          this.pSpriteObj.anchor.set(0.5, 0.5);
-          this.pSpriteObj.hitArea = new Circle(position.x, position.y, length/2);
-          stage.addChild(this.pSpriteObj);
-          resolve();
-        });
-      } catch (e) {
-        reject(e);
-      }
-    });
+  setup(stage) {
+    const { position, length, assetSource } = this.spriteOptions;
+    this.pSpriteObj = new Sprite(loader.resources[assetSource].texture);
+    this.pSpriteObj.position = position;
+    this.pSpriteObj.width = this.pSpriteObj.height = length;
+    this.pSpriteObj.anchor.set(0.5, 0.5);
+    this.pSpriteObj.hitArea = new Circle(position.x, position.y, length / 2);
+    stage.addChild(this.pSpriteObj);
   }
 
   spin(ticker, radians) {

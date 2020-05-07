@@ -15,3 +15,4 @@ Solar system duplicate from go-jek android bootcamp #2.
 
 ### Disclaimer
 I did not make any of the asset.
+Icon: <a target="_blank" href="https://icons8.com/icons/set/fire-alarm-button">Alert icon</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>

@@ -5,20 +5,23 @@ import Earth from './earth.js';
 import Moon from './moon.js';
 import Meteor from './meteor.js';
 
+import Loader from './asset-loader';
+
 import Movement from './ricochetMovement.js';
 import Collision from './collision.js';
 import SpawnMeteorButton from './spawnMeteorButton.js';
 
-async function spawnRandomMeteor(
+function spawnRandomMeteor(
   windowWidth,
   windowHeight,
   sunCollision,
   ticker,
-  stage
+  stage,
+  meteorTexture
 ) {
-  const meteor = Meteor.withRandomPosition(windowWidth, windowHeight);
+  const meteor = Meteor.withRandomPosition(windowWidth, windowHeight, meteorTexture);
   meteor.setMovement(new Movement(6, windowWidth, windowHeight));
-  await meteor.load(stage);
+  meteor.setup(stage);
 
   const meteorAnimation = () => {
     meteor.shoot();
@@ -31,7 +34,7 @@ async function spawnRandomMeteor(
   ticker.add(meteorAnimation);
 }
 
-document.addEventListener('DOMContentLoaded', async function(event) {
+document.addEventListener('DOMContentLoaded', async function (event) {
   const app = new P.Application({
     width: window.outerWidth - 20,
     height: window.outerHeight - 135
@@ -39,22 +42,23 @@ document.addEventListener('DOMContentLoaded', async function(event) {
   app.renderer.backgroundColor = 0x071335;
   document.body.appendChild(app.view);
 
-  const {width: appWidth, height: appHeight} = app.screen;
+  const { width: appWidth, height: appHeight } = app.screen;
 
-  const sun = new Sun(appWidth, appHeight);
-  const earth = new Earth(appWidth, appHeight);
-  const moon = new Moon(appWidth, appHeight);
+  await Loader.load();
+  const sun = new Sun(appWidth, appHeight, Loader.map.sun);
+  const earth = new Earth(appWidth, appHeight, Loader.map.earth);
+  const moon = new Moon(appWidth, appHeight, Loader.map.moon);
   const spawnMeteorButton = new SpawnMeteorButton({
     x: 100,
     y: appHeight / 10
-  });
+  }, Loader.map.trigger);
 
   const sunCollision = new Collision([sun]);
 
-  await sun.load(app.stage);
-  await earth.load(app.stage);
-  await moon.load(app.stage);
-  await spawnMeteorButton.load(app.stage);
+  sun.setup(app.stage);
+  earth.setup(app.stage);
+  moon.setup(app.stage);
+  spawnMeteorButton.setup(app.stage);
 
   sun.spin(app.ticker, 0.05);
   earth.spin(app.ticker, 0.02);
@@ -64,13 +68,14 @@ document.addEventListener('DOMContentLoaded', async function(event) {
   app.ticker.add(buttonShake);
 
   spawnMeteorButton.onClick(
-    async () =>
-      await spawnRandomMeteor(
+    () =>
+      spawnRandomMeteor(
         appWidth,
         appHeight,
         sunCollision,
         app.ticker,
-        app.stage
+        app.stage,
+        Loader.map.meteor
       )
   );
 

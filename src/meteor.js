@@ -1,50 +1,33 @@
 import { Sprite, loader, Point } from 'pixi.js';
 import Vector from 'victor';
-import starPng from '../assets/star.png';
 
 export default class Meteor {
-  static withRandomPosition(windowWidth, windowHeight) {
+  static withRandomPosition(windowWidth, windowHeight, texture) {
     const { x, y } = new Vector().randomize(
       Vector(0, 0),
       Vector(windowWidth, windowHeight)
     );
     const diameter = Math.random() * 50;
-    return new Meteor(x, y, diameter);
+    return new Meteor(x, y, diameter, texture);
   }
 
-  constructor(x, y, length) {
+  constructor(x, y, length, texture) {
     this.options = {
       position: new Point(x, y),
       length
     };
+    this.texture = texture
   }
 
   setMovement(movement) {
     this.movement = movement;
   }
 
-  load(stage) {
-    return new Promise((resolve, reject) => {
-      const loaderCallback = () => {
-        this.pSpriteObj = new Sprite(loader.resources[starPng].texture);
-        this.pSpriteObj.position = this.options.position;
-        this.pSpriteObj.width = this.pSpriteObj.height = this.options.length;
-        stage.addChild(this.pSpriteObj);
-      };
-      try {
-        loader.add(starPng).load(() => {
-          loaderCallback();
-          resolve();
-        });
-      } catch (e) {
-        if (e.message.split(' ')[0].toLowerCase() == 'resource') {
-          loaderCallback();
-          resolve();
-        } else {
-          reject(e);
-        }
-      }
-    });
+  setup(stage) {
+    this.pSpriteObj = new Sprite(loader.resources[this.texture].texture);
+    this.pSpriteObj.position = this.options.position;
+    this.pSpriteObj.width = this.pSpriteObj.height = this.options.length;
+    stage.addChild(this.pSpriteObj);
   }
 
   destroy() {

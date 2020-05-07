@@ -1,30 +1,19 @@
 import { Sprite, loader, Point } from 'pixi.js';
-import solarSystemText from '../assets/meteor-button.png';
 
 export default class SpawnMeteorButton {
-  constructor(position, width) {
+  constructor(position, texture) {
     this.position = new Point(position.x, position.y);
-    this.width = width;
+    this.texture = texture;
   }
 
-  load(stage) {
-    return new Promise((resolve, reject) => {
-      try {
-        loader.add(solarSystemText).load(() => {
-          this.pSpriteObj = new Sprite(
-            loader.resources[solarSystemText].texture
-          );
-          this.pSpriteObj.position = this.position;
-          this.pSpriteObj.anchor.set(0.5);
+  setup(stage) {
+    this.pSpriteObj = new Sprite(
+      loader.resources[this.texture].texture
+    );
+    this.pSpriteObj.position = this.position;
+    this.pSpriteObj.anchor.set(0.5);
 
-          stage.addChild(this.pSpriteObj);
-
-          resolve();
-        });
-      } catch (e) {
-        reject(e);
-      }
-    });
+    stage.addChild(this.pSpriteObj);
   }
 
   shake(maxY, adder) {
