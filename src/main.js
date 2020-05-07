@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async function (event) {
   sun.spin(app.ticker, 0.05);
   earth.spin(app.ticker, 0.02);
   moon.spin(app.ticker, 0.005);
-  const buttonShake = spawnMeteorButton.shake(3, 3);
+  const buttonShake = spawnMeteorButton.shake(3, 0.4);
 
   app.ticker.add(buttonShake);
 

@@ -13,6 +13,16 @@ export default class SpawnMeteorButton {
     this.pSpriteObj.position = this.position;
     this.pSpriteObj.anchor.set(0.5);
 
+    this.pSpriteObj.interactive = true;
+    this.pSpriteObj.on('mouseover', () => {
+      this.pSpriteObj.width = this.pSpriteObj.width * 1.15;
+      this.pSpriteObj.height = this.pSpriteObj.height * 1.15;
+    })
+    this.pSpriteObj.on('mouseout', () => {
+      this.pSpriteObj.width = this.pSpriteObj.width * 0.85;
+      this.pSpriteObj.height = this.pSpriteObj.height * 0.85;
+    })
+
     stage.addChild(this.pSpriteObj);
   }
 
@@ -27,14 +37,19 @@ export default class SpawnMeteorButton {
         this.pSpriteObj.y -= adder;
         offset--;
       }
-      if ((offset > maxY && !isInvert) || (offset < maxY && isInvert)) {
+      console.log(isInvert);
+      console.log(this.position.y);
+      console.log(offset);
+      
+      
+      
+      if ((offset > maxY && !isInvert) || (offset <= 0  && isInvert)) {
         isInvert = !isInvert;
       }
     };
   }
 
   onClick(callback) {
-    this.pSpriteObj.interactive = true;
     this.pSpriteObj.on('mouseover', callback);
     this.pSpriteObj.on('click', callback);
   }
