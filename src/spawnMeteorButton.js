@@ -64,5 +64,6 @@ export default class SpawnMeteorButton {
   onClick(callback) {
     this.pSpriteObj.on('mouseover', callback);
     this.pSpriteObj.on('click', callback);
+    this.pSpriteObj.on('tap', callback);
   }
 }
